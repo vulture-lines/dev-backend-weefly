@@ -1,0 +1,59 @@
+name: Deploy Node.js Backend to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Deploy to EC2
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.EC2_IP_ADDRESS }}
+        username: ${{ secrets.EC2_EC2_USER }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          echo "Updating packages and installing Node.js and PM2..."
+          sudo apt-get update
+          sudo apt-get install -y nodejs npm
+          sudo npm install -g pm2
+
+          echo "Fixing directory permissions..."
+          sudo mkdir -p /var/www/html
+          sudo chown -R $USER:$USER /var/www/html
+          cd /var/www/html
+
+          if [ ! -d "Weefly-backend-project" ]; then
+            echo "Cloning repository for the first time..."
+            git clone https://github.com/vulture-lines/Weefly-backend-project.git
+          fi
+
+          cd Weefly-backend-project
+
+          echo "Resetting local changes and pulling latest code..."
+          git reset --hard
+          git pull origin main
+
+          echo "Installing dependencies..."
+          npm install
+
+          echo "Checking for Server.js file..."
+          if [ ! -f Server.js ]; then
+            echo "❌ ERROR: Server.js not found. Please check your project entry point."
+            exit 1
+          fi
+
+          echo "Starting or restarting PM2 process..."
+          pm2 describe weefly-backend > /dev/null
+          if [ $? -ne 0 ]; then
+            pm2 start Server.js --name weefly-backend
+          else
+            pm2 restart weefly-backend
+          fi
