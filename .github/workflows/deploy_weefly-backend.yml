@@ -1,4 +1,4 @@
-name: Deploy Node.js Backend to EC2
+name: Deploy Node.js Backend_to EC2
 
 on:
   push:
