@@ -19,6 +19,7 @@ jobs:
         host: ${{ secrets.EC2_IP_ADDRESS }}
         username: ${{ secrets.EC2_EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
+        envs: GITHUB_PAT
         script: |
           echo "Updating packages and installing Node.js and PM2..."
           sudo apt-get update
@@ -32,7 +33,7 @@ jobs:
 
           if [ ! -d "Weefly-backend-project" ]; then
             echo "Cloning repository for the first time..."
-            git clone https://github.com/vulture-lines/dev-backend-weefly.git
+            git clone https://somas:$PAT_github@github.com/vulture-lines/dev-backend-weefly.git
           fi
 
           cd Weefly-backend-project
