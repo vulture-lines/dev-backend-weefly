@@ -33,7 +33,7 @@ jobs:
 
           if [ ! -d "Weefly-backend-project" ]; then
             echo "Cloning repository for the first time..."
-            git clone https://somas:$PAT_github@github.com/vulture-lines/dev-backend-weefly.git
+            git clone https://somas:$PAT_GITHUB@github.com/vulture-lines/dev-backend-weefly.git
           fi
 
           cd Weefly-backend-project
