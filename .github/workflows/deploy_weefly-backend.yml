@@ -31,12 +31,12 @@ jobs:
           sudo chown -R $USER:$USER /var/www/html
           cd /var/www/html
 
-          if [ ! -d "Weefly-backend-project" ]; then
+          if [ ! -d "dev-backend-weefly" ]; then
             echo "Cloning repository for the first time..."
-            git clone https://somas:$PAT_GITHUB@github.com/vulture-lines/dev-backend-weefly.git
+            git clone https://somas:$GITHUB_PAT@github.com/vulture-lines/dev-backend-weefly.git
           fi
 
-          cd Weefly-backend-project
+          cd dev-backend-weefly
 
           echo "Resetting local changes and pulling latest code..."
           git reset --hard
