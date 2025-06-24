@@ -87,7 +87,7 @@ const startRouting = async (req, res) => {
     });
   } catch (err) {
     console.error("StartRouting Error:", err.message);
-    res.status(500).json({ error: "StartRouting request failed" });
+    res.status(500).json({ error: err.message });
   }
 };
 
