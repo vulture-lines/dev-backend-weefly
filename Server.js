@@ -5,6 +5,7 @@ const express = require("express");
 const flightsRoute = require("./routes/Amadeusroutes");
 const userRoute = require("./routes/Userdetails.js");
 const otpRoute = require("./routes/Otproute.js");
+const travelFusionRoute=require("./controller/travelfusion/routes/Travelfusionapi.js")
 const connectDb = require("./config/Db.js");
 dotenv.config();
 const app = express();
@@ -21,6 +22,7 @@ app.use(cookieParser());
 app.use("/api", flightsRoute);
 app.use("/api", userRoute);
 app.use("/api", otpRoute);
+app.use("/api", travelFusionRoute);
 connectDb();
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
