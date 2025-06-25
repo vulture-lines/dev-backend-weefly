@@ -74,9 +74,9 @@ const startRouting = async (req, res) => {
     // return res.status(200).send(response.data)
 
     const parsed = await parseStringPromise(response.data);
-    console.log(parsed)
+    console.log(parsed);
     const startRoutingResponse = parsed?.CommandList?.StartRouting?.[0];
-    
+
     if (!startRoutingResponse?.RoutingId?.[0]) {
       return res.status(500).json({ error: "No RoutingId returned" });
     }
@@ -93,7 +93,8 @@ const startRouting = async (req, res) => {
 const checkRouting = async (req, res) => {
   try {
     const { routingId } = req.body;
-    if (!routingId) return res.status(400).json({ error: "RoutingId is required" });
+    if (!routingId)
+      return res.status(400).json({ error: "RoutingId is required" });
 
     const loginId = await fetchLoginID();
 
@@ -107,13 +108,17 @@ const checkRouting = async (req, res) => {
       },
     });
 
-    const response = await axios.post("https://api.travelfusion.com", checkRoutingXml, {
-      headers: {
-        "Content-Type": "text/xml; charset=utf-8",
-        Accept: "text/xml",
-      },
-      timeout: 120000,
-    });
+    const response = await axios.post(
+      "https://api.travelfusion.com",
+      checkRoutingXml,
+      {
+        headers: {
+          "Content-Type": "text/xml; charset=utf-8",
+          Accept: "text/xml",
+        },
+        timeout: 120000,
+      }
+    );
 
     const parsed = await parseStringPromise(response.data);
     const checkRoutingResponse = parsed?.CommandList?.CheckRouting?.[0];
@@ -130,7 +135,9 @@ const processDetails = async (req, res) => {
     const { routingId, outwardId, returnId = null } = req.body;
 
     if (!routingId || !outwardId) {
-      return res.status(400).json({ error: "RoutingId and OutwardId are required" });
+      return res
+        .status(400)
+        .json({ error: "RoutingId and OutwardId are required" });
     }
 
     const loginId = await fetchLoginID();
@@ -175,19 +182,12 @@ const processDetails = async (req, res) => {
 
 const submitProcessTerms = async (req, res) => {
   try {
-    const {
-      loginId,
-      routingId,
-      traveller,
-      contact,
-      billing,
-      creditCard,
-    } = req.body;
+    const { routingId, traveller, contact, billing, creditCard } = req.body;
 
-    if (!loginId || !routingId || !traveller || !contact || !billing || !creditCard) {
+    if (!routingId || !traveller || !contact || !billing || !creditCard) {
       return res.status(400).json({ error: "Missing required fields" });
     }
-
+    const loginId = await fetchLoginID();
     const builder = new Builder({ headless: true });
 
     const xmlObj = {
@@ -281,7 +281,7 @@ const submitProcessTerms = async (req, res) => {
 
 module.exports = {
   startRouting,
-    checkRouting,
-    processDetails,
-    submitProcessTerms
+  checkRouting,
+  processDetails,
+  submitProcessTerms,
 };
