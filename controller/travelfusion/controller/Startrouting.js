@@ -254,7 +254,6 @@ const submitProcessTerms = async (req, res) => {
     };
 
     const xml = builder.buildObject(xmlObj);
-
     const response = await axios.post("https://api.travelfusion.com", xml, {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
@@ -262,17 +261,17 @@ const submitProcessTerms = async (req, res) => {
       },
       timeout: 120000,
     });
+  return res.status(200).send(response.data)
+    // const parsed = await parseStringPromise(response.data);
 
-    const parsed = await parseStringPromise(response.data);
+    // const processTermsResponse = parsed?.CommandList?.ProcessTerms?.[0];
+    // const bookingRef = processTermsResponse?.TFBookingReference?.[0];
+    // const routerData = processTermsResponse?.Router?.[0];
 
-    const processTermsResponse = parsed?.CommandList?.ProcessTerms?.[0];
-    const bookingRef = processTermsResponse?.TFBookingReference?.[0];
-    const routerData = processTermsResponse?.Router?.[0];
-
-    res.status(200).json({
-      bookingReference: bookingRef,
-      routerInfo: routerData,
-    });
+    // res.status(200).json({
+    //   bookingReference: bookingRef,
+    //   routerInfo: routerData,
+    // });
   } catch (error) {
     console.error("ProcessTerms Error:", error.message);
     res.status(500).json({ error: error.message });
