@@ -125,7 +125,57 @@ const checkRouting = async (req, res) => {
   }
 };
 
+const processDetails = async (req, res) => {
+  try {
+    const { routingId, outwardId, returnId = null } = req.body;
+
+    if (!routingId || !outwardId) {
+      return res.status(400).json({ error: "RoutingId and OutwardId are required" });
+    }
+
+    const loginId = await fetchLoginID();
+
+    const requestObj = {
+      CommandList: {
+        ProcessDetails: {
+          XmlLoginId: loginId,
+          LoginId: loginId,
+          RoutingId: routingId,
+          OutwardId: outwardId,
+          HandoffParametersOnly: false,
+        },
+      },
+    };
+
+    // Add ReturnId if provided
+    if (returnId) {
+      requestObj.CommandList.ProcessDetails.ReturnId = returnId;
+    }
+
+    const builder = new Builder({ headless: true });
+    const xml = builder.buildObject(requestObj);
+
+    const response = await axios.post("https://api.travelfusion.com", xml, {
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        Accept: "text/xml",
+      },
+      timeout: 120000,
+    });
+
+    const parsed = await parseStringPromise(response.data);
+    const processResponse = parsed?.CommandList?.ProcessDetails?.[0];
+
+    res.status(200).json({ data: processResponse });
+  } catch (err) {
+    console.error("ProcessDetails Error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
 module.exports = {
   startRouting,
     checkRouting,
+    processDetails
 };
