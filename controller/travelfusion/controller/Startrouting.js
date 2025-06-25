@@ -90,7 +90,42 @@ const startRouting = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+const checkRouting = async (req, res) => {
+  try {
+    const { routingId } = req.body;
+    if (!routingId) return res.status(400).json({ error: "RoutingId is required" });
+
+    const loginId = await fetchLoginID();
+
+    const checkRoutingXml = new Builder({ headless: true }).buildObject({
+      CommandList: {
+        CheckRouting: {
+          XmlLoginId: loginId,
+          LoginId: loginId,
+          RoutingId: routingId,
+        },
+      },
+    });
+
+    const response = await axios.post("https://api.travelfusion.com", checkRoutingXml, {
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        Accept: "text/xml",
+      },
+      timeout: 120000,
+    });
+
+    const parsed = await parseStringPromise(response.data);
+    const checkRoutingResponse = parsed?.CommandList?.CheckRouting?.[0];
+
+    res.status(200).json({ data: checkRoutingResponse });
+  } catch (err) {
+    console.error("CheckRouting Error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
 
 module.exports = {
   startRouting,
+    checkRouting,
 };
