@@ -180,6 +180,51 @@ const processDetails = async (req, res) => {
   }
 };
 
+const processTerms = async (req, res) => {
+  try {
+    const { mode = "plane", routingId, bookingProfile } = req.body;
+
+    if (!routingId || !bookingProfile) {
+      return res
+        .status(400)
+        .json({ error: "RoutingId and BookingProfile are required" });
+    }
+
+    const loginId = await fetchLoginID();
+
+    const requestObj = {
+      CommandList: {
+        ProcessTerms: {
+          XmlLoginId: loginId,
+          LoginId: loginId,
+          Mode: mode,
+          RoutingId: routingId,
+          BookingProfile: bookingProfile,
+        },
+      },
+    };
+
+    const builder = new Builder({ headless: true });
+    const xml = builder.buildObject(requestObj);
+
+    const response = await axios.post("https://api.travelfusion.com", xml, {
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        Accept: "text/xml",
+      },
+      timeout: 120000,
+    });
+
+    const parsed = await parseStringPromise(response.data);
+    const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
+
+    res.status(200).json({ data: termsResponse });
+  } catch (err) {
+    console.error("ProcessTerms Error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 const startBooking = async (req, res) => {
   try {
     const { expectedAmount, expectedCurrency = "GBP" } = req.body;
@@ -215,7 +260,7 @@ const startBooking = async (req, res) => {
       },
       timeout: 120000,
     });
-    return res.status(200).send(response.data)
+    return res.status(200).send(response.data);
     // const parsed = await parseStringPromise(response.data);
     // const result = parsed?.CommandList?.StartBooking?.[0];
 
@@ -229,10 +274,10 @@ const startBooking = async (req, res) => {
   }
 };
 
-
 module.exports = {
   startRouting,
   checkRouting,
   processDetails,
-  startBooking
+  processTerms,
+  startBooking,
 };
