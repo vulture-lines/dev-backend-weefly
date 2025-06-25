@@ -12,7 +12,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://weefly-frontend.vercel.app"],
+    origin: ["http://localhost:5173", "https://weefly-frontend.vercel.app","http://localhost:3000"],
     credentials: true,
   })
 );
