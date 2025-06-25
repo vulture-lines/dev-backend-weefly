@@ -180,80 +180,34 @@ const processDetails = async (req, res) => {
   }
 };
 
-const submitProcessTerms = async (req, res) => {
+const startBooking = async (req, res) => {
   try {
-    const { routingId, traveller, contact, billing, creditCard } = req.body;
-
-    if (!routingId || !traveller || !contact || !billing || !creditCard) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
+    const { expectedAmount, expectedCurrency = "GBP" } = req.body;
     const loginId = await fetchLoginID();
+
     const builder = new Builder({ headless: true });
 
-    const xmlObj = {
+    const startBookingObj = {
       CommandList: {
-        ProcessTerms: {
+        StartBooking: {
           XmlLoginId: loginId,
           LoginId: loginId,
-          RoutingId: routingId,
-          BookingProfile: {
-            TravellerList: {
-              Traveller: {
-                Age: traveller.age,
-                Name: {
-                  Title: traveller.title,
-                  NamePartList: {
-                    NamePart: traveller.nameParts,
-                  },
-                },
-                CustomSupplierParameterList: {
-                  CustomSupplierParameter: {
-                    Name: "DateOfBirth",
-                    Value: traveller.dob,
-                  },
-                },
-              },
-            },
-            ContactDetails: {
-              Name: {
-                Title: contact.title,
-                NamePartList: {
-                  NamePart: contact.nameParts,
-                },
-              },
-              Address: contact.address,
-              HomePhone: contact.phone,
-              Email: contact.email,
-            },
-            BillingDetails: {
-              Name: {
-                Title: billing.title,
-                NamePartList: {
-                  NamePart: billing.nameParts,
-                },
-              },
-              Address: billing.address,
-              CreditCard: {
-                Company: creditCard.company || "",
-                NameOnCard: {
-                  NamePartList: {
-                    NamePart: creditCard.nameOnCard,
-                  },
-                },
-                Number: creditCard.number,
-                SecurityCode: creditCard.securityCode,
-                ExpiryDate: creditCard.expiryDate,
-                StartDate: creditCard.startDate,
-                CardType: creditCard.cardType,
-                IssueNumber: creditCard.issueNumber || "0",
-              },
-            },
+          TFBookingReference: "undefined",
+          ExpectedPrice: {
+            Amount: expectedAmount,
+            Currency: expectedCurrency,
+          },
+          FakeBooking: {
+            EnableFakeBooking: true,
+            FakeBookingSimulatedDelaySeconds: 0,
+            FakeBookingStatus: "Succeeded",
           },
         },
       },
     };
 
-    const xml = builder.buildObject(xmlObj);
+    const xml = builder.buildObject(startBookingObj);
+
     const response = await axios.post("https://api.travelfusion.com", xml, {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
@@ -261,26 +215,24 @@ const submitProcessTerms = async (req, res) => {
       },
       timeout: 120000,
     });
-  return res.status(200).send(response.data)
-    // const parsed = await parseStringPromise(response.data);
 
-    // const processTermsResponse = parsed?.CommandList?.ProcessTerms?.[0];
-    // const bookingRef = processTermsResponse?.TFBookingReference?.[0];
-    // const routerData = processTermsResponse?.Router?.[0];
+    const parsed = await parseStringPromise(response.data);
+    const result = parsed?.CommandList?.StartBooking?.[0];
 
-    // res.status(200).json({
-    //   bookingReference: bookingRef,
-    //   routerInfo: routerData,
-    // });
-  } catch (error) {
-    console.error("ProcessTerms Error:", error.message);
-    res.status(500).json({ error: error.message });
+    res.status(200).json({
+      bookingReference: result?.TFBookingReference?.[0],
+      routerInfo: result?.Router,
+    });
+  } catch (err) {
+    console.error("StartBooking Error:", err.message);
+    res.status(500).json({ error: err.message });
   }
 };
+
 
 module.exports = {
   startRouting,
   checkRouting,
   processDetails,
-  submitProcessTerms,
+  startBooking
 };
