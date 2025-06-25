@@ -215,14 +215,14 @@ const startBooking = async (req, res) => {
       },
       timeout: 120000,
     });
+    return res.status(200).send(response.data)
+    // const parsed = await parseStringPromise(response.data);
+    // const result = parsed?.CommandList?.StartBooking?.[0];
 
-    const parsed = await parseStringPromise(response.data);
-    const result = parsed?.CommandList?.StartBooking?.[0];
-
-    res.status(200).json({
-      bookingReference: result?.TFBookingReference?.[0],
-      routerInfo: result?.Router,
-    });
+    // res.status(200).json({
+    //   bookingReference: result?.TFBookingReference?.[0],
+    //   routerInfo: result?.Router,
+    // });
   } catch (err) {
     console.error("StartBooking Error:", err.message);
     res.status(500).json({ error: err.message });
