@@ -227,7 +227,7 @@ const processTerms = async (req, res) => {
 
 const startBooking = async (req, res) => {
   try {
-    const { expectedAmount, expectedCurrency = "GBP" } = req.body;
+    const { expectedAmount, expectedCurrency = "GBP" ,TFBookingReference} = req.body;
     const loginId = await fetchLoginID();
 
     const builder = new Builder({ headless: true });
@@ -237,7 +237,7 @@ const startBooking = async (req, res) => {
         StartBooking: {
           XmlLoginId: loginId,
           LoginId: loginId,
-          TFBookingReference: "undefined",
+          TFBookingReference: TFBookingReference,
           ExpectedPrice: {
             Amount: expectedAmount,
             Currency: expectedCurrency,
