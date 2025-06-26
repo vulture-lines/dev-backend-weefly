@@ -206,7 +206,7 @@ const processTerms = async (req, res) => {
 
     const builder = new Builder({ headless: true });
     const xml = builder.buildObject(requestObj);
-
+    
     const response = await axios.post("https://api.travelfusion.com", xml, {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
@@ -214,6 +214,7 @@ const processTerms = async (req, res) => {
       },
       timeout: 120000,
     });
+    return res.status(200).send(response.data);
     const parsed = await parseStringPromise(response.data);
     const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
 
