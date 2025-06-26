@@ -224,9 +224,65 @@ const processTerms = async (req, res) => {
   }
 };
 
+// const startBooking = async (req, res) => {
+//   try {
+//     const { expectedAmount, expectedCurrency = "GBP" ,TFBookingReference} = req.body;
+//     const loginId = await fetchLoginID();
+
+//     const builder = new Builder({ headless: true });
+
+//     const startBookingObj = {
+//       CommandList: {
+//         StartBooking: {
+//           XmlLoginId: loginId,
+//           LoginId: loginId,
+//           TFBookingReference: TFBookingReference,
+//           ExpectedPrice: {
+//             Amount: expectedAmount,
+//             Currency: expectedCurrency,
+//           },
+//           FakeBooking: {
+//             EnableFakeBooking: true,
+//             FakeBookingSimulatedDelaySeconds: 0,
+//             FakeBookingStatus: "Succeeded",
+//           },
+//         },
+//       },
+//     };
+
+//     const xml = builder.buildObject(startBookingObj);
+
+//     const response = await axios.post("https://api.travelfusion.com", xml, {
+//       headers: {
+//         "Content-Type": "text/xml; charset=utf-8",
+//         Accept: "text/xml",
+//       },
+//       timeout: 120000,
+//     });
+//     // return res.status(200).send(response.data);
+//     const parsed = await parseStringPromise(response.data);
+//     const result = parsed?.CommandList?.StartBooking?.[0];
+
+//     res.status(200).json({
+//       bookingReference: result?.TFBookingReference?.[0],
+//       routerInfo: result?.Router,
+//     });
+//   } catch (err) {
+//     console.error("StartBooking Error:", err.message);
+//     res.status(500).json({ error: err.message });
+//   }
+// };
+
 const startBooking = async (req, res) => {
   try {
-    const { expectedAmount, expectedCurrency = "GBP" ,TFBookingReference} = req.body;
+    const {
+      expectedAmount,
+      expectedCurrency = 'GBP',
+      TFBookingReference,
+      seatOptionValue = '', // Example: "5477-1A;;;4550-29F;;"
+      fakeBooking = true
+    } = req.body;
+
     const loginId = await fetchLoginID();
 
     const builder = new Builder({ headless: true });
@@ -241,34 +297,42 @@ const startBooking = async (req, res) => {
             Amount: expectedAmount,
             Currency: expectedCurrency,
           },
-          FakeBooking: {
-            EnableFakeBooking: true,
-            FakeBookingSimulatedDelaySeconds: 0,
-            FakeBookingStatus: "Succeeded",
-          },
+          ...(seatOptionValue && {
+            CustomSupplierParameter: {
+              Name: 'SeatOptions',
+              Value: seatOptionValue,
+            },
+          }),
+          ...(fakeBooking && {
+            FakeBooking: {
+              EnableFakeBooking: true,
+              FakeBookingSimulatedDelaySeconds: 0,
+              FakeBookingStatus: 'Succeeded',
+            },
+          }),
         },
       },
     };
 
     const xml = builder.buildObject(startBookingObj);
 
-    const response = await axios.post("https://api.travelfusion.com", xml, {
+    const response = await axios.post('https://api.travelfusion.com', xml, {
       headers: {
-        "Content-Type": "text/xml; charset=utf-8",
-        Accept: "text/xml",
+        'Content-Type': 'text/xml; charset=utf-8',
+        Accept: 'text/xml',
       },
       timeout: 120000,
     });
-    // return res.status(200).send(response.data);
+
     const parsed = await parseStringPromise(response.data);
     const result = parsed?.CommandList?.StartBooking?.[0];
 
     res.status(200).json({
       bookingReference: result?.TFBookingReference?.[0],
-      routerInfo: result?.Router,
+      routerInfo: result?.Router || null,
     });
   } catch (err) {
-    console.error("StartBooking Error:", err.message);
+    console.error('StartBooking Error:', err.message);
     res.status(500).json({ error: err.message });
   }
 };
