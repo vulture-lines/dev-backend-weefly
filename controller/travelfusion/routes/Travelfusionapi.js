@@ -1,7 +1,7 @@
 // routes/routing.js
 const express = require("express");
 const router = express.Router();
-const { startRouting ,checkRouting,processDetails,startBooking,processTerms, checkBooking} = require("../controller/Startrouting");
+const { startRouting ,checkRouting,processDetails,startBooking,processTerms, checkBooking, getBookingDetails} = require("../controller/Startrouting");
 
 // POST /api/start-routing
 router.post("/start-routing", startRouting);
@@ -10,4 +10,5 @@ router.post('/process-details', processDetails);
 router.post('/process-terms',processTerms);
 router.post("/start-booking", startBooking);
 router.post("/check-booking", checkBooking);
+router.post("/get-bookingdetails", getBookingDetails);
 module.exports = router;

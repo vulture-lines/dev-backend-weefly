@@ -475,6 +475,47 @@ const checkBooking = async (req, res) => {
   }
 };
 
+const getBookingDetails = async (req, res) => {
+  try {
+    const { TFBookingReference } = req.body;
+    const loginId = await fetchLoginID();
+
+    const builder = new Builder({ headless: true });
+
+    const getBookingObj = {
+      CommandList: {
+        GetBookingDetails: {
+          XmlLoginId: loginId,
+          LoginId: loginId,
+          TFBookingReference: TFBookingReference,
+        },
+      },
+    };
+
+    const xml = builder.buildObject(getBookingObj);
+
+    const response = await axios.post("https://api.travelfusion.com", xml, {
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        Accept: "text/xml",
+      },
+      timeout: 120000,
+    });
+
+    const parsed = await parseStringPromise(response.data);
+    const result = parsed?.CommandList?.CheckBooking?.[0];
+
+    res.status(200).json({
+      bookingReference: result?.TFBookingReference?.[0],
+      bookingStatus: result?.BookingStatus?.[0],
+      additionalInfo: result,
+    });
+  } catch (err) {
+    console.error("CheckBooking Error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 
 module.exports = {
   startRouting,
@@ -482,5 +523,6 @@ module.exports = {
   processDetails,
   processTerms,
   startBooking,
-  checkBooking
+  checkBooking,
+  getBookingDetails
 };
