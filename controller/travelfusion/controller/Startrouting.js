@@ -515,6 +515,63 @@ const getBookingDetails = async (req, res) => {
   }
 };
 
+const getBookingDetailsForCancellation = async (req, res) => {
+  try {
+    const { tfBookingReference, customParams = [] } = req.body;
+
+    if (!tfBookingReference) {
+      return res.status(400).json({ error: "TFBookingReference is required" });
+    }
+
+    const loginId = await fetchLoginID();
+    const customSupplierParams = [
+      {
+        Name: "IsBookingForCancellation",
+        Value: "true"
+      },
+      ...customParams
+    ];
+
+    const requestObj = {
+      CommandList: {
+        GetBookingDetails: {
+          XmlLoginId: loginId,
+          LoginId: loginId,
+          TFBookingReference: tfBookingReference,
+          BookingProfile: {
+            CustomSupplierParameterList: {
+              CustomSupplierParameter: customSupplierParams
+            }
+          }
+        }
+      }
+    };
+
+    const builder = new Builder({ headless: true });
+    const xml = builder.buildObject(requestObj);
+
+    const response = await axios.post("https://api.travelfusion.com", xml, {
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        Accept: "text/xml",
+      },
+      timeout: 120000,
+    });
+
+    const parsed = await parseStringPromise(response.data);
+    const bookingDetails = parsed?.CommandList?.GetBookingDetails?.[0];
+    if(bookingDetails===""){
+      res.status(200).json({ data: bookingDetails });
+    } else{
+      res.status(400).json({requested:response.data})
+    }
+ 
+  } catch (err) {
+    console.error("GetBookingDetails Error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 
 module.exports = {
   startRouting,
@@ -523,5 +580,6 @@ module.exports = {
   processTerms,
   startBooking,
   checkBooking,
-  getBookingDetails
+  getBookingDetails,
+  getBookingDetailsForCancellation
 };
