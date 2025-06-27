@@ -27,5 +27,5 @@ router.post(
   getBookingDetailsForCancellation
 );
 router.post("/cancel-booking", startBookingCancelPlane);
-router.post("/get-bookingdetailscancellation", checkBookingCancelPlane);
+router.post("/get-cancellationstatus", checkBookingCancelPlane);
 module.exports = router;
