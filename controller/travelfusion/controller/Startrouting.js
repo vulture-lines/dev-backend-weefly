@@ -503,12 +503,11 @@ const getBookingDetails = async (req, res) => {
     });
 
     const parsed = await parseStringPromise(response.data);
+
     const result = parsed?.CommandList?.CheckBooking?.[0];
 
     res.status(200).json({
-      bookingReference: result?.TFBookingReference?.[0],
-      bookingStatus: result?.BookingStatus?.[0],
-      additionalInfo: result,
+      parsed
     });
   } catch (err) {
     console.error("CheckBooking Error:", err.message);
