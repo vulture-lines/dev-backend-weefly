@@ -1,16 +1,31 @@
 // routes/routing.js
 const express = require("express");
 const router = express.Router();
-const { startRouting ,checkRouting,processDetails,startBooking,processTerms, checkBooking, getBookingDetails, getBookingDetailsForCancellation} = require("../controller/Startrouting");
+const {
+  startRouting,
+  checkRouting,
+  processDetails,
+  startBooking,
+  processTerms,
+  checkBooking,
+  getBookingDetails,
+  getBookingDetailsForCancellation,
+  startBookingCancelPlane,
+  checkBookingCancelPlane,
+} = require("../controller/Startrouting");
 
 // POST /api/start-routing
 router.post("/start-routing", startRouting);
-router.post('/check-routing', checkRouting);
-router.post('/process-details', processDetails);
-router.post('/process-terms',processTerms);
+router.post("/check-routing", checkRouting);
+router.post("/process-details", processDetails);
+router.post("/process-terms", processTerms);
 router.post("/start-booking", startBooking);
 router.post("/check-booking", checkBooking);
 router.post("/get-bookingdetails", getBookingDetails);
-router.post("/get-bookingdetailscancellation", getBookingDetailsForCancellation);
-
+router.post(
+  "/get-bookingdetailscancellation",
+  getBookingDetailsForCancellation
+);
+router.post("/cancel-booking", startBookingCancelPlane);
+router.post("/get-bookingdetailscancellation", checkBookingCancelPlane);
 module.exports = router;
