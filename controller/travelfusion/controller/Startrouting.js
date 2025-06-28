@@ -363,14 +363,14 @@ const processTerms = async (req, res) => {
       },
       timeout: 120000,
     });
-return res.status(400).json({ requesteddata: response.data });
-    // const parsed = await parseStringPromise(response.data);
-    // const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
-    // if (termsResponse !== "") {
-    //   res.status(200).json({ data: termsResponse });
-    // } else {
-    //   res.status(400).json({ requesteddata: response.data });
-    // }
+
+    const parsed = await parseStringPromise(response.data);
+    const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
+    if (termsResponse !== "") {
+      res.status(200).json({ data: termsResponse });
+    } else {
+      res.status(400).json({ requesteddata: response.data });
+    }
   } catch (err) {
     console.error("ProcessTerms Error:", err.message);
     res.status(500).json({ error: err.message });
