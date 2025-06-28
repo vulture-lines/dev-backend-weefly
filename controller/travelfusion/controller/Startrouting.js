@@ -280,12 +280,11 @@ const processTerms = async (req, res) => {
       mode = "plane", 
       routingId, 
       bookingProfile,
-      outwardId,
       returnId = null,
       seatOptions // <== added to handle seat selection
     } = req.body;
 
-    if (!routingId || !bookingProfile || !outwardId) {
+    if (!routingId || !bookingProfile) {
       return res
         .status(400)
         .json({ error: "routingId, outwardId, and bookingProfile are required" });
@@ -299,7 +298,6 @@ const processTerms = async (req, res) => {
       LoginId: loginId,
       Mode: mode,
       RoutingId: routingId,
-      OutwardId: outwardId,
       BookingProfile: bookingProfile,
     };
 
