@@ -5,64 +5,29 @@ const { Builder } = require("xml2js");
 const { parseStringPromise } = require("xml2js");
 const { fetchLoginID } = require("../Loginidgenerator"); // Import the login function
 
-/*const startRouting = async (req, res) => {
+const getBranchSupplierList = async (req, res) => {
   try {
-    const {
-      mode = "plane",
-      origin,
-      destination,
-      dateOfSearch,
-      maxChanges = 1,
-      maxHops = 2,
-      timeout = 40,
-      travellers = [],
-      incrementalResults = true,
-    } = req.body;
+    // get loginId
+    const loginId = await fetchLoginID(); // your function to get login ID
 
-    if (!origin || !destination || !dateOfSearch || travellers.length === 0) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
-
-    // 🔐 Get loginId by calling the login function
-    const loginId = await fetchLoginID();
-
+    // build the XML structure
     const builder = new Builder({ headless: true });
 
-    const startRoutingObj = {
+    const requestObj = {
       CommandList: {
-        StartRouting: {
+        GetBranchSupplierList: {
           XmlLoginId: loginId,
           LoginId: loginId,
-          Mode: mode,
-          Origin: {
-            Descriptor: origin.descriptor,
-            Type: origin.type,
-          },
-          Destination: {
-            Descriptor: destination.descriptor,
-            Type: destination.type,
-            Radius: destination.radius || 1000,
-          },
-          OutwardDates: {
-            DateOfSearch: dateOfSearch,
-          },
-          MaxChanges: maxChanges,
-          MaxHops: maxHops,
-          Timeout: timeout,
-          TravellerList: {
-            Traveller: travellers.map((age) => ({ Age: age })),
-          },
-          IncrementalResults: incrementalResults,
         },
       },
     };
 
-    const routingXml = builder.buildObject(startRoutingObj);
-    // console.log("Request XML:\n", routingXml);
+    const requestXml = builder.buildObject(requestObj);
 
+    // send it to Travelfusion
     const response = await axios.post(
       "https://api.travelfusion.com",
-      routingXml,
+      requestXml,
       {
         headers: {
           "Content-Type": "text/xml; charset=utf-8",
@@ -71,118 +36,16 @@ const { fetchLoginID } = require("../Loginidgenerator"); // Import the login fun
         timeout: 120000,
       }
     );
-    // return res.status(200).send(response.data)
 
+    // parse the XML response to JS
     const parsed = await parseStringPromise(response.data);
-    const startRoutingResponse = parsed?.CommandList?.StartRouting?.[0];
 
-    if (!startRoutingResponse?.RoutingId?.[0]) {
-      return res.status(500).json({ error: "No RoutingId returned" ,requestdata:response.data });
-    }
-
-    res.status(200).json({
-      routingId: startRoutingResponse.RoutingId[0],
-      routerList: startRoutingResponse.RouterList || [],
-    });
+    res.status(200).json(parsed);
   } catch (err) {
-    console.error("StartRouting Error:", err.message);
+    console.error("GetBranchSupplierList Error:", err.message);
     res.status(500).json({ error: err.message });
   }
-}; */
-
-// const startRouting = async (req, res) => {
-//   try {
-//     const {
-//       mode = "plane",
-//       origin,
-//       destination,
-//       dateOfSearch,
-//       returnDateOfSearch, // <-- new field for return trips
-//       maxChanges = 1,
-//       maxHops = 2,
-//       timeout = 40,
-//       travellers = [],
-//       incrementalResults = true,
-//     } = req.body;
-
-//     if (!origin || !destination || !dateOfSearch || travellers.length === 0) {
-//       return res.status(400).json({ error: "Missing required fields" });
-//     }
-
-//     // 🔐 Get loginId by calling the login function
-//     const loginId = await fetchLoginID();
-
-//     const builder = new Builder({ headless: true });
-
-//     const startRoutingObj = {
-//       CommandList: {
-//         StartRouting: {
-//           XmlLoginId: loginId,
-//           LoginId: loginId,
-//           Mode: mode,
-//           Origin: {
-//             Descriptor: origin.descriptor,
-//             Type: origin.type,
-//           },
-//           Destination: {
-//             Descriptor: destination.descriptor,
-//             Type: destination.type,
-//             Radius: destination.radius || 1000,
-//           },
-//           OutwardDates: {
-//             DateOfSearch: dateOfSearch,
-//           },
-//           // add ReturnDates if provided
-//           ...(returnDateOfSearch && {
-//             ReturnDates: {
-//               DateOfSearch: returnDateOfSearch,
-//             },
-//           }),
-//           MaxChanges: maxChanges,
-//           MaxHops: maxHops,
-//           Timeout: timeout,
-//           TravellerList: {
-//             Traveller: travellers.map((age) => ({ Age: age })),
-//           },
-//           IncrementalResults: incrementalResults,
-//         },
-//       },
-//     };
-
-//     const routingXml = builder.buildObject(startRoutingObj);
-//     // console.log("Request XML:\n", routingXml);
-
-//     const response = await axios.post(
-//       "https://api.travelfusion.com",
-//       routingXml,
-//       {
-//         headers: {
-//           "Content-Type": "text/xml; charset=utf-8",
-//           Accept: "text/xml",
-//         },
-//         timeout: 120000,
-//       }
-//     );
-
-//     const parsed = await parseStringPromise(response.data);
-//     const startRoutingResponse = parsed?.CommandList?.StartRouting?.[0];
-
-//     if (!startRoutingResponse?.RoutingId?.[0]) {
-//       return res.status(500).json({
-//         error: "No RoutingId returned",
-//         requestdata: response.data,
-//       });
-//     }
-
-//     res.status(200).json({
-//       routingId: startRoutingResponse.RoutingId[0],
-//       routerList: startRoutingResponse.RouterList || [],
-//     });
-//   } catch (err) {
-//     console.error("StartRouting Error:", err.message);
-//     res.status(500).json({ error: err.message });
-//   }
-// };
+};
 
 const startRouting = async (req, res) => {
   try {
@@ -283,7 +146,6 @@ const startRouting = async (req, res) => {
   }
 };
 
-
 const checkRouting = async (req, res) => {
   try {
     const { routingId } = req.body;
@@ -376,18 +238,20 @@ const processDetails = async (req, res) => {
 
 const processTerms = async (req, res) => {
   try {
-    const { 
-      mode = "plane", 
-      routingId, 
+    const {
+      mode = "plane",
+      routingId,
       bookingProfile,
       returnId = null,
-      seatOptions // <== added to handle seat selection
+      seatOptions, // <== added to handle seat selection
     } = req.body;
 
     if (!routingId || !bookingProfile) {
       return res
         .status(400)
-        .json({ error: "routingId, outwardId, and bookingProfile are required" });
+        .json({
+          error: "routingId, outwardId, and bookingProfile are required",
+        });
     }
 
     const loginId = await fetchLoginID();
@@ -411,14 +275,14 @@ const processTerms = async (req, res) => {
       processTermsObj.CustomSupplierParameterList = {
         CustomSupplierParameter: {
           Name: "SeatOptions",
-          Value: seatOptions
-        }
+          Value: seatOptions,
+        },
       };
     }
 
     const requestObj = {
       CommandList: {
-        ProcessTerms: processTermsObj
+        ProcessTerms: processTermsObj,
       },
     };
 
@@ -442,56 +306,6 @@ const processTerms = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
-
-// const startBooking = async (req, res) => {
-//   try {
-//     const { expectedAmount, expectedCurrency = "GBP" ,TFBookingReference} = req.body;
-//     const loginId = await fetchLoginID();
-
-//     const builder = new Builder({ headless: true });
-
-//     const startBookingObj = {
-//       CommandList: {
-//         StartBooking: {
-//           XmlLoginId: loginId,
-//           LoginId: loginId,
-//           TFBookingReference: TFBookingReference,
-//           ExpectedPrice: {
-//             Amount: expectedAmount,
-//             Currency: expectedCurrency,
-//           },
-//           FakeBooking: {
-//             EnableFakeBooking: true,
-//             FakeBookingSimulatedDelaySeconds: 0,
-//             FakeBookingStatus: "Succeeded",
-//           },
-//         },
-//       },
-//     };
-
-//     const xml = builder.buildObject(startBookingObj);
-
-//     const response = await axios.post("https://api.travelfusion.com", xml, {
-//       headers: {
-//         "Content-Type": "text/xml; charset=utf-8",
-//         Accept: "text/xml",
-//       },
-//       timeout: 120000,
-//     });
-//     // return res.status(200).send(response.data);
-//     const parsed = await parseStringPromise(response.data);
-//     const result = parsed?.CommandList?.StartBooking?.[0];
-
-//     res.status(200).json({
-//       bookingReference: result?.TFBookingReference?.[0],
-//       routerInfo: result?.Router,
-//     });
-//   } catch (err) {
-//     console.error("StartBooking Error:", err.message);
-//     res.status(500).json({ error: err.message });
-//   }
-// };
 
 const startBooking = async (req, res) => {
   try {
@@ -812,4 +626,5 @@ module.exports = {
   getBookingDetailsForCancellation,
   startBookingCancelPlane,
   checkBookingCancelPlane,
+  getBranchSupplierList
 };

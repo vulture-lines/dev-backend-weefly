@@ -12,6 +12,7 @@ const {
   getBookingDetailsForCancellation,
   startBookingCancelPlane,
   checkBookingCancelPlane,
+  getBranchSupplierList,
 } = require("../controller/Startrouting");
 
 // POST /api/start-routing
@@ -28,4 +29,5 @@ router.post(
 );
 router.post("/cancel-booking", startBookingCancelPlane);
 router.post("/get-cancellationstatus", checkBookingCancelPlane);
+router.get("/get-supplierlist", getBranchSupplierList);
 module.exports = router;
