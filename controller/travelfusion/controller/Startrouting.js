@@ -274,7 +274,7 @@ const processDetails = async (req, res) => {
   }
 };
 
-const processTerms = async (req, res) => {
+/* const processTerms = async (req, res) => {
   try {
     const { mode = "plane", routingId, bookingProfile } = req.body;
 
@@ -313,6 +313,64 @@ const processTerms = async (req, res) => {
     const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
 
     res.status(200).json({ data: termsResponse });
+  } catch (err) {
+    console.error("ProcessTerms Error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};*/
+
+const processTerms = async (req, res) => {
+  try {
+    const { mode = "plane", routingId, bookingProfile, seatOptions } = req.body;
+
+    if (!routingId || !bookingProfile) {
+      return res
+        .status(400)
+        .json({ error: "RoutingId and BookingProfile are required" });
+    }
+
+    const loginId = await fetchLoginID();
+
+    const processTermsData = {
+      XmlLoginId: loginId,
+      LoginId: loginId,
+      Mode: mode,
+      RoutingId: routingId,
+      BookingProfile: bookingProfile,
+    };
+
+    // Add seatOptions only if provided
+    if (seatOptions) {
+      processTermsData.CustomSupplierParameter = {
+        Name: "SeatOptions",
+        Value: seatOptions, // Example: "5477-1A;;;4550-29F;;"
+      };
+    }
+
+    const requestObj = {
+      CommandList: {
+        ProcessTerms: processTermsData,
+      },
+    };
+
+    const builder = new Builder({ headless: true });
+    const xml = builder.buildObject(requestObj);
+
+    const response = await axios.post("https://api.travelfusion.com", xml, {
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        Accept: "text/xml",
+      },
+      timeout: 120000,
+    });
+
+    const parsed = await parseStringPromise(response.data);
+    const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
+    if (termsResponse !== "") {
+      res.status(200).json({ data: termsResponse });
+    } else {
+      res.status(400).json({ requesteddata: response.data });
+    }
   } catch (err) {
     console.error("ProcessTerms Error:", err.message);
     res.status(500).json({ error: err.message });
@@ -374,7 +432,6 @@ const startBooking = async (req, res) => {
       expectedAmount,
       expectedCurrency = "GBP",
       TFBookingReference,
-      seatOptionValue = "", // Example: "5477-1A;;;4550-29F;;"
       fakeBooking = true,
     } = req.body;
 
@@ -392,12 +449,6 @@ const startBooking = async (req, res) => {
             Amount: expectedAmount,
             Currency: expectedCurrency,
           },
-          ...(seatOptionValue && {
-            CustomSupplierParameter: {
-              Name: "SeatOptions",
-              Value: seatOptionValue,
-            },
-          }),
           ...(fakeBooking && {
             FakeBooking: {
               EnableFakeBooking: true,
@@ -422,11 +473,16 @@ const startBooking = async (req, res) => {
 
     const parsed = await parseStringPromise(response.data);
     const result = parsed?.CommandList?.StartBooking?.[0];
-
-    res.status(200).json({
-      bookingReference: result?.TFBookingReference?.[0],
-      routerInfo: result?.Router || null,
-    });
+    if (result !== "") {
+      res.status(200).json({
+        bookingReference: result?.TFBookingReference?.[0],
+        routerInfo: result?.Router || null,
+      });
+    } else {
+      return res.status(200).json({
+        requesteddata: response.data,
+      });
+    }
   } catch (err) {
     console.error("StartBooking Error:", err.message);
     res.status(500).json({ error: err.message });
@@ -653,17 +709,13 @@ const checkBookingCancelPlane = async (req, res) => {
     const builder = new Builder({ headless: true });
     const xml = builder.buildObject(requestObj);
 
-    const response = await axios.post(
-      "https://api.travelfusion.com",
-      xml,
-      {
-        headers: {
-          "Content-Type": "text/xml; charset=utf-8",
-          Accept: "text/xml",
-        },
-        timeout: 120000,
-      }
-    );
+    const response = await axios.post("https://api.travelfusion.com", xml, {
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        Accept: "text/xml",
+      },
+      timeout: 120000,
+    });
 
     const parsed = await parseStringPromise(response.data);
     const cancelStatus = parsed?.CommandList?.CheckBookingCancelPlane?.[0];
@@ -682,7 +734,6 @@ const checkBookingCancelPlane = async (req, res) => {
   }
 };
 
-
 module.exports = {
   startRouting,
   checkRouting,
@@ -693,5 +744,5 @@ module.exports = {
   getBookingDetails,
   getBookingDetailsForCancellation,
   startBookingCancelPlane,
-  checkBookingCancelPlane
+  checkBookingCancelPlane,
 };
