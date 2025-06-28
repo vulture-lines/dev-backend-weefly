@@ -352,10 +352,10 @@ const processTerms = async (req, res) => {
         ProcessTerms: processTermsData,
       },
     };
-    return res.status(200).json({requestedsata:requestObj})
-    // const builder = new Builder({ headless: true });
-    // const xml = builder.buildObject(requestObj);
 
+    const builder = new Builder({ headless: true });
+    const xml = builder.buildObject(requestObj);
+    return res.status(200).json({requestedsata:xml})
     // const response = await axios.post("https://api.travelfusion.com", xml, {
     //   headers: {
     //     "Content-Type": "text/xml; charset=utf-8",
