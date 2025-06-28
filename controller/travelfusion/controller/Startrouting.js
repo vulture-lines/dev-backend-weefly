@@ -243,41 +243,50 @@ const processTerms = async (req, res) => {
       routingId,
       bookingProfile,
       returnId = null,
-      seatOptions, // <== added to handle seat selection
+      seatOptions = [],  // added
     } = req.body;
 
     if (!routingId || !bookingProfile) {
-      return res
-        .status(400)
-        .json({
-          error: "routingId, outwardId, and bookingProfile are required",
-        });
+      return res.status(400).json({
+        error: "routingId and bookingProfile are required",
+      });
     }
 
     const loginId = await fetchLoginID();
 
-    // build the ProcessTerms object
+    // Build the seat options string
+    let seatOptionsString = "";
+    if (seatOptions.length) {
+      seatOptionsString = seatOptions.join(";"); // 1 seat per segment, even if empty
+    }
+
+    // build BookingProfile with CSP if needed
+    let bookingProfileObj = bookingProfile;
+
+    if (seatOptionsString) {
+      bookingProfileObj = {
+        ...bookingProfile,
+        CustomSupplierParameterList: {
+          CustomSupplierParameter: [
+            {
+              Name: "SeatOptions",
+              Value: seatOptionsString,
+            },
+          ],
+        },
+      };
+    }
+
     const processTermsObj = {
       XmlLoginId: loginId,
       LoginId: loginId,
       Mode: mode,
       RoutingId: routingId,
-      BookingProfile: bookingProfile,
+      BookingProfile: bookingProfileObj,
     };
 
-    // add ReturnId if provided
     if (returnId) {
       processTermsObj.ReturnId = returnId;
-    }
-
-    // if seat options exist, add them
-    if (seatOptions) {
-      processTermsObj.CustomSupplierParameterList = {
-        CustomSupplierParameter: {
-          Name: "SeatOptions",
-          Value: seatOptions,
-        },
-      };
     }
 
     const requestObj = {
@@ -286,9 +295,11 @@ const processTerms = async (req, res) => {
       },
     };
 
+    // build XML
     const builder = new Builder({ headless: true });
     const xml = builder.buildObject(requestObj);
 
+    // send request
     const response = await axios.post("https://api.travelfusion.com", xml, {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
@@ -297,6 +308,7 @@ const processTerms = async (req, res) => {
       timeout: 120000,
     });
 
+    // parse XML back to JS
     const parsed = await parseStringPromise(response.data);
     const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
 
@@ -306,6 +318,7 @@ const processTerms = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 const startBooking = async (req, res) => {
   try {
@@ -626,5 +639,5 @@ module.exports = {
   getBookingDetailsForCancellation,
   startBookingCancelPlane,
   checkBookingCancelPlane,
-  getBranchSupplierList
+  getBranchSupplierList,
 };
