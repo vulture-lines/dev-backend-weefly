@@ -331,21 +331,37 @@ const processTerms = async (req, res) => {
 
     const loginId = await fetchLoginID();
 
+    // clone the bookingProfile so you can safely modify it
+    const bookingProfileCopy = { ...bookingProfile };
+
+    // If seatOptions is provided, attach it inside CustomSupplierParameterList
+    if (seatOptions) {
+      if (!bookingProfileCopy.CustomSupplierParameterList) {
+        bookingProfileCopy.CustomSupplierParameterList = [];
+      }
+
+      // if already an array, push; if object, convert to array then push
+      if (!Array.isArray(bookingProfileCopy.CustomSupplierParameterList)) {
+        bookingProfileCopy.CustomSupplierParameterList = [
+          bookingProfileCopy.CustomSupplierParameterList,
+        ];
+      }
+
+      bookingProfileCopy.CustomSupplierParameterList.push({
+        CustomSupplierParameter: {
+          Name: "SeatOptions",
+          Value: seatOptions, // like "5477-1A;;;4550-29F;;"
+        },
+      });
+    }
+
     const processTermsData = {
       XmlLoginId: loginId,
       LoginId: loginId,
       Mode: mode,
       RoutingId: routingId,
-      BookingProfile: bookingProfile,
+      BookingProfile: bookingProfileCopy,
     };
-
-    // Add seatOptions only if provided
-    if (seatOptions) {
-      processTermsData.CustomSupplierParameter = {
-        Name: "SeatOptions",
-        Value: seatOptions, // Example: "5477-1A;;;4550-29F;;"
-      };
-    }
 
     const requestObj = {
       CommandList: {
@@ -372,6 +388,7 @@ const processTerms = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 
 // const startBooking = async (req, res) => {
