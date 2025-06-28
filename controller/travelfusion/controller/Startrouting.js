@@ -325,6 +325,8 @@ const processTerms = async (req, res) => {
     const builder = new Builder({ headless: true });
     const xml = builder.buildObject(requestObj);
 
+    return res.status(400).send(xml)
+
     const response = await axios.post("https://api.travelfusion.com", xml, {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
