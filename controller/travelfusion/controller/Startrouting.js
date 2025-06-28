@@ -355,20 +355,18 @@ const processTerms = async (req, res) => {
 
     const builder = new Builder({ headless: true });
     const xml = builder.buildObject(requestObj);
-    return res.status(200).json({requestedsata:xml})
-    // const response = await axios.post("https://api.travelfusion.com", xml, {
-    //   headers: {
-    //     "Content-Type": "text/xml; charset=utf-8",
-    //     Accept: "text/xml",
-    //   },
-    //   timeout: 120000,
-    // });
 
-    // return res.status(200).json({requestedsata:response.data})
+    const response = await axios.post("https://api.travelfusion.com", xml, {
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        Accept: "text/xml",
+      },
+      timeout: 120000,
+    });
 
-    // const parsed = await parseStringPromise(response.data);
-    // const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
-    // res.status(200).json({ data: termsResponse });
+    const parsed = await parseStringPromise(response.data);
+    const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
+    res.status(200).json({ data: termsResponse });
   } catch (err) {
     console.error("ProcessTerms Error:", err.message);
     res.status(500).json({ error: err.message });
