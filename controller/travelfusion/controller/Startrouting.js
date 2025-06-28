@@ -363,19 +363,16 @@ const processTerms = async (req, res) => {
       },
       timeout: 120000,
     });
-
-    const parsed = await parseStringPromise(response.data);
-    const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
-    if (termsResponse !== "") {
-      res.status(200).json({ data: termsResponse });
-    } else {
-      res.status(400).json({ requesteddata: response.data });
-    }
+    return res.status(200).send(response.data);
+    // const parsed = await parseStringPromise(response.data);
+    // const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
+    // res.status(200).json({ data: termsResponse });
   } catch (err) {
     console.error("ProcessTerms Error:", err.message);
     res.status(500).json({ error: err.message });
   }
 };
+
 
 // const startBooking = async (req, res) => {
 //   try {
