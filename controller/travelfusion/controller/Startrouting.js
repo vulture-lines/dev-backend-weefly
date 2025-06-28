@@ -352,19 +352,19 @@ const processTerms = async (req, res) => {
         ProcessTerms: processTermsData,
       },
     };
+    return res.status(200).json({requestedsata:requestObj})
+    // const builder = new Builder({ headless: true });
+    // const xml = builder.buildObject(requestObj);
 
-    const builder = new Builder({ headless: true });
-    const xml = builder.buildObject(requestObj);
+    // const response = await axios.post("https://api.travelfusion.com", xml, {
+    //   headers: {
+    //     "Content-Type": "text/xml; charset=utf-8",
+    //     Accept: "text/xml",
+    //   },
+    //   timeout: 120000,
+    // });
 
-    const response = await axios.post("https://api.travelfusion.com", xml, {
-      headers: {
-        "Content-Type": "text/xml; charset=utf-8",
-        Accept: "text/xml",
-      },
-      timeout: 120000,
-    });
-
-    return res.status(200).json({requestedsata:response.data})
+    // return res.status(200).json({requestedsata:response.data})
 
     // const parsed = await parseStringPromise(response.data);
     // const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
