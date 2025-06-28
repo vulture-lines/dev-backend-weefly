@@ -364,9 +364,11 @@ const processTerms = async (req, res) => {
       timeout: 120000,
     });
 
-    const parsed = await parseStringPromise(response.data);
-    const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
-    res.status(200).json({ data: termsResponse });
+    return res.status(200).json({requestedsata:response.data})
+
+    // const parsed = await parseStringPromise(response.data);
+    // const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
+    // res.status(200).json({ data: termsResponse });
   } catch (err) {
     console.error("ProcessTerms Error:", err.message);
     res.status(500).json({ error: err.message });
