@@ -243,7 +243,7 @@ const processTerms = async (req, res) => {
       routingId,
       bookingProfile,
       returnId = null,
-      seatOptions = [],  // added
+      seatOptions = [],
     } = req.body;
 
     if (!routingId || !bookingProfile) {
@@ -254,27 +254,46 @@ const processTerms = async (req, res) => {
 
     const loginId = await fetchLoginID();
 
-    // Build the seat options string
-    let seatOptionsString = "";
-    if (seatOptions.length) {
-      seatOptionsString = seatOptions.join(";"); // 1 seat per segment, even if empty
-    }
+    // deep copy bookingProfile to modify
+    let bookingProfileObj = JSON.parse(JSON.stringify(bookingProfile));
 
-    // build BookingProfile with CSP if needed
-    let bookingProfileObj = bookingProfile;
+    // assign seatOptions per passenger
+    if (seatOptions.length && bookingProfileObj.TravellerList?.Traveller) {
+      let travellers = bookingProfileObj.TravellerList.Traveller;
 
-    if (seatOptionsString) {
-      bookingProfileObj = {
-        ...bookingProfile,
-        CustomSupplierParameterList: {
-          CustomSupplierParameter: [
-            {
-              Name: "SeatOptions",
-              Value: seatOptionsString,
-            },
-          ],
-        },
-      };
+      // if only one passenger, wrap in array
+      if (!Array.isArray(travellers)) {
+        travellers = [travellers];
+      }
+
+      travellers = travellers.map((traveller, index) => {
+        const seat = seatOptions[index] || "";
+
+        // get existing CSPs
+        let csps = traveller.CustomSupplierParameterList?.CustomSupplierParameter || [];
+
+        // normalize to array
+        if (!Array.isArray(csps)) {
+          csps = [csps];
+        }
+
+        // add seat if available
+        if (seat) {
+          csps.push({
+            Name: "SeatOptions",
+            Value: seat,
+          });
+        }
+
+        return {
+          ...traveller,
+          CustomSupplierParameterList: {
+            CustomSupplierParameter: csps,
+          },
+        };
+      });
+
+      bookingProfileObj.TravellerList.Traveller = travellers;
     }
 
     const processTermsObj = {
@@ -295,11 +314,11 @@ const processTerms = async (req, res) => {
       },
     };
 
-    // build XML
+    // convert to XML
     const builder = new Builder({ headless: true });
     const xml = builder.buildObject(requestObj);
 
-    // send request
+    // send to TravelFusion
     const response = await axios.post("https://api.travelfusion.com", xml, {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
@@ -307,8 +326,8 @@ const processTerms = async (req, res) => {
       },
       timeout: 120000,
     });
-    return res.status(400).send(response.data)
-    // parse XML back to JS
+
+    // parse XML response
     const parsed = await parseStringPromise(response.data);
     const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
 
@@ -318,6 +337,7 @@ const processTerms = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 
 const startBooking = async (req, res) => {
