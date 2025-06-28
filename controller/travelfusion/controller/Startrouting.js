@@ -274,98 +274,53 @@ const processDetails = async (req, res) => {
   }
 };
 
-/* const processTerms = async (req, res) => {
-  try {
-    const { mode = "plane", routingId, bookingProfile } = req.body;
-
-    if (!routingId || !bookingProfile) {
-      return res
-        .status(400)
-        .json({ error: "RoutingId and BookingProfile are required" });
-    }
-
-    const loginId = await fetchLoginID();
-
-    const requestObj = {
-      CommandList: {
-        ProcessTerms: {
-          XmlLoginId: loginId,
-          LoginId: loginId,
-          Mode: mode,
-          RoutingId: routingId,
-          BookingProfile: bookingProfile,
-        },
-      },
-    };
-
-    const builder = new Builder({ headless: true });
-    const xml = builder.buildObject(requestObj);
-
-    const response = await axios.post("https://api.travelfusion.com", xml, {
-      headers: {
-        "Content-Type": "text/xml; charset=utf-8",
-        Accept: "text/xml",
-      },
-      timeout: 120000,
-    });
-    // return res.status(200).send(response.data);
-    const parsed = await parseStringPromise(response.data);
-    const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
-
-    res.status(200).json({ data: termsResponse });
-  } catch (err) {
-    console.error("ProcessTerms Error:", err.message);
-    res.status(500).json({ error: err.message });
-  }
-};*/
-
 const processTerms = async (req, res) => {
   try {
-    const { mode = "plane", routingId, bookingProfile, seatOptions } = req.body;
+    const { 
+      mode = "plane", 
+      routingId, 
+      bookingProfile,
+      outwardId,
+      returnId = null,
+      seatOptions // <== added to handle seat selection
+    } = req.body;
 
-    if (!routingId || !bookingProfile) {
+    if (!routingId || !bookingProfile || !outwardId) {
       return res
         .status(400)
-        .json({ error: "RoutingId and BookingProfile are required" });
+        .json({ error: "routingId, outwardId, and bookingProfile are required" });
     }
 
     const loginId = await fetchLoginID();
 
-    // clone the bookingProfile so you can safely modify it
-    const bookingProfileCopy = { ...bookingProfile };
-
-    // If seatOptions is provided, attach it inside CustomSupplierParameterList
-    if (seatOptions) {
-      if (!bookingProfileCopy.CustomSupplierParameterList) {
-        bookingProfileCopy.CustomSupplierParameterList = [];
-      }
-
-      // if already an array, push; if object, convert to array then push
-      if (!Array.isArray(bookingProfileCopy.CustomSupplierParameterList)) {
-        bookingProfileCopy.CustomSupplierParameterList = [
-          bookingProfileCopy.CustomSupplierParameterList,
-        ];
-      }
-
-      bookingProfileCopy.CustomSupplierParameterList.push({
-        CustomSupplierParameter: {
-          Name: "SeatOptions",
-          Value: seatOptions, // like "5477-1A;;;4550-29F;;"
-        },
-      });
-    }
-
-    const processTermsData = {
+    // build the ProcessTerms object
+    const processTermsObj = {
       XmlLoginId: loginId,
       LoginId: loginId,
       Mode: mode,
       RoutingId: routingId,
-      BookingProfile: bookingProfileCopy,
+      OutwardId: outwardId,
+      BookingProfile: bookingProfile,
     };
+
+    // add ReturnId if provided
+    if (returnId) {
+      processTermsObj.ReturnId = returnId;
+    }
+
+    // if seat options exist, add them
+    if (seatOptions) {
+      processTermsObj.CustomSupplierParameterList = {
+        CustomSupplierParameter: {
+          Name: "SeatOptions",
+          Value: seatOptions
+        }
+      };
+    }
 
     const requestObj = {
       CommandList: {
-        ProcessTerms: processTermsData,
+        ProcessTerms: processTermsObj
       },
     };
 
@@ -379,16 +334,16 @@ const processTerms = async (req, res) => {
       },
       timeout: 120000,
     });
-    return res.status(200).send(response.data);
+
     const parsed = await parseStringPromise(response.data);
     const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
+
     res.status(200).json({ data: termsResponse });
   } catch (err) {
     console.error("ProcessTerms Error:", err.message);
     res.status(500).json({ error: err.message });
   }
 };
-
 
 
 // const startBooking = async (req, res) => {
