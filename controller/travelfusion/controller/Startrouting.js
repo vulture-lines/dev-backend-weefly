@@ -261,6 +261,8 @@ const startRouting = async (req, res) => {
       }
     );
 
+    return res(400).send(response.data)
+
     const parsed = await parseStringPromise(response.data);
     const startRoutingResponse = parsed?.CommandList?.StartRouting?.[0];
 
