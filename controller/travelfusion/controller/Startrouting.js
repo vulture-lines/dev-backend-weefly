@@ -315,7 +315,7 @@ const processTerms = async (req, res) => {
 
     // Add ReturnId if provided
     if (returnId) {
-      requestObj.processTermsObj.ReturnId = returnId;
+      requestObj.CommandList.ProcessTerms.ReturnId = returnId;
     }
 
     // convert to XML
