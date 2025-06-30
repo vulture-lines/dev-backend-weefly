@@ -242,7 +242,6 @@ const processTerms = async (req, res) => {
       mode = "plane",
       routingId,
       bookingProfile,
-      returnId = null,
       seatOptions = [],
     } = req.body;
 
@@ -304,10 +303,6 @@ const processTerms = async (req, res) => {
       BookingProfile: bookingProfileObj,
     };
 
-    if (returnId) {
-      processTermsObj.ReturnId = returnId;
-    }
-
     const requestObj = {
       CommandList: {
         ProcessTerms: processTermsObj,
@@ -317,7 +312,6 @@ const processTerms = async (req, res) => {
     // convert to XML
     const builder = new Builder({ headless: true });
     const xml = builder.buildObject(requestObj);
-
     // send to TravelFusion
     const response = await axios.post("https://api.travelfusion.com", xml, {
       headers: {
@@ -326,8 +320,10 @@ const processTerms = async (req, res) => {
       },
       timeout: 120000,
     });
-
-    return res.status(400).send(response.data)
+    return res.status(200).json({
+      reqxml: xml,
+      resxml: response.data
+    });
 
     // parse XML response
     const parsed = await parseStringPromise(response.data);
@@ -339,8 +335,6 @@ const processTerms = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
-
 
 const startBooking = async (req, res) => {
   try {
@@ -520,7 +514,6 @@ const getBookingDetailsForCancellation = async (req, res) => {
 
     const builder = new Builder({ headless: true });
     const xml = builder.buildObject(requestObj);
-
     const response = await axios.post("https://api.travelfusion.com", xml, {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
