@@ -320,7 +320,7 @@ const processTerms = async (req, res) => {
       },
       timeout: 120000,
     });
-    return res.status(200).send(xml)
+    return res.status(200).send(response.data)
 
     // parse XML response
     const parsed = await parseStringPromise(response.data);
