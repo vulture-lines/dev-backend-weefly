@@ -304,6 +304,8 @@ const processTerms = async (req, res) => {
       Mode: mode,
       RoutingId: routingId,
       OutwardId: outwardId,
+      // insert ReturnId right here if present
+      ...(returnId ? { ReturnId: returnId } : {}),
       BookingProfile: bookingProfileObj,
     };
 
@@ -312,11 +314,6 @@ const processTerms = async (req, res) => {
         ProcessTerms: processTermsObj,
       },
     };
-
-    // Add ReturnId if provided
-    if (returnId) {
-      requestObj.CommandList.ProcessTerms.ReturnId = returnId;
-    }
 
     // convert to XML
     const builder = new Builder({ headless: true });
@@ -329,7 +326,6 @@ const processTerms = async (req, res) => {
       },
       timeout: 120000,
     });
-    return res.status(200).send(xml);
 
     // parse XML response
     const parsed = await parseStringPromise(response.data);
