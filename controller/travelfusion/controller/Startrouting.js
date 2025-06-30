@@ -243,6 +243,8 @@ const processTerms = async (req, res) => {
       routingId,
       bookingProfile,
       seatOptions = [],
+      outwardId,
+      returnId = null,
     } = req.body;
 
     if (!routingId || !bookingProfile) {
@@ -269,7 +271,8 @@ const processTerms = async (req, res) => {
         const seat = seatOptions[index] || "";
 
         // get existing CSPs
-        let csps = traveller.CustomSupplierParameterList?.CustomSupplierParameter || [];
+        let csps =
+          traveller.CustomSupplierParameterList?.CustomSupplierParameter || [];
 
         // normalize to array
         if (!Array.isArray(csps)) {
@@ -300,6 +303,7 @@ const processTerms = async (req, res) => {
       LoginId: loginId,
       Mode: mode,
       RoutingId: routingId,
+      OutwardId: outwardId,
       BookingProfile: bookingProfileObj,
     };
 
@@ -308,6 +312,11 @@ const processTerms = async (req, res) => {
         ProcessTerms: processTermsObj,
       },
     };
+
+    // Add ReturnId if provided
+    if (returnId) {
+      requestObj.processTermsObj.ReturnId = returnId;
+    }
 
     // convert to XML
     const builder = new Builder({ headless: true });
@@ -320,7 +329,7 @@ const processTerms = async (req, res) => {
       },
       timeout: 120000,
     });
-    return res.status(200).send(response.data)
+    return res.status(200).send(response.data);
 
     // parse XML response
     const parsed = await parseStringPromise(response.data);
