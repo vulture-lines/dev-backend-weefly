@@ -280,7 +280,7 @@ const processTerms = async (req, res) => {
         if (seat) {
           csps.push({
             Name: "SeatOptions",
-            Value: seat,
+            Value: `${seat};`,
           });
         }
 
@@ -320,7 +320,7 @@ const processTerms = async (req, res) => {
       },
       timeout: 120000,
     });
-    return res.status(200).send(response.data)
+    return res.status(200).send(xml)
 
     // parse XML response
     const parsed = await parseStringPromise(response.data);
