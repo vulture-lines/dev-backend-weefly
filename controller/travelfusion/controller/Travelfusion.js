@@ -175,7 +175,9 @@ const checkRouting = async (req, res) => {
 
     const parsed = await parseStringPromise(response.data);
     const checkRoutingResponse = parsed?.CommandList?.CheckRouting?.[0];
-    res.status(200).json({ data: checkRoutingResponse });
+    const routeId = checkRoutingResponse.RoutingId;
+    const flightList = checkRoutingResponse.RouterList;
+    res.status(200).json({ routingId: routeId, flightList: flightList });
   } catch (err) {
     console.error("CheckRouting Error:", err.message);
     res.status(500).json({ error: err.message });
