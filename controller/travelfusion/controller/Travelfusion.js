@@ -325,7 +325,7 @@ const processTerms = async (req, res) => {
       },
       timeout: 120000,
     });
-
+    return res.status(200).send(response)
     // parse XML response
     const parsed = await parseStringPromise(response.data);
     const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
