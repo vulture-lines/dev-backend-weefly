@@ -22,7 +22,7 @@ app.use(cookieParser());
 app.use("/api", flightsRoute);
 app.use("/api", userRoute);
 app.use("/api", otpRoute);
-app.use("/api", travelFusionRoute);
+app.use("/flightapi", travelFusionRoute);
 connectDb();
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
