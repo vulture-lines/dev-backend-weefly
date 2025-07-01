@@ -223,6 +223,7 @@ const processDetails = async (req, res) => {
       },
       timeout: 120000,
     });
+        return res.status(200).send(response)
 
     const parsed = await parseStringPromise(response.data);
     const processResponse = parsed?.CommandList?.ProcessDetails?.[0];
