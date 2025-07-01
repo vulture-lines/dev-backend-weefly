@@ -643,6 +643,42 @@ const checkBookingCancelPlane = async (req, res) => {
   }
 };
 
+const getCurrencyList = async (req, res) => {
+  try {
+
+    const loginId = await fetchLoginID();
+
+    const builder = new Builder({ headless: true });
+
+    const currencyObj= {
+      CommandList: {
+        GetCurrencies:{
+          XmlLoginId: loginId,
+          LoginId: loginId,
+        },
+      }};
+
+    const xml = builder.buildObject(currencyObj);
+
+    const response = await axios.post("https://api.travelfusion.com", xml, {
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        Accept: "text/xml",
+      },
+      timeout: 120000,
+    });
+
+    const parsed = await parseStringPromise(response.data);
+
+    res.status(200).json({
+      Currencydata:parsed
+    });
+  } catch (err) {
+    console.error("CheckBooking Error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = {
   startRouting,
   checkRouting,
@@ -655,4 +691,5 @@ module.exports = {
   startBookingCancelPlane,
   checkBookingCancelPlane,
   getBranchSupplierList,
+  getCurrencyList
 };
