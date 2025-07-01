@@ -329,8 +329,6 @@ const processTerms = async (req, res) => {
     // parse XML response
     const parsed = await parseStringPromise(response.data);
     const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
-      return res.status(422).send(response.data)
-
     res.status(200).json({ data: termsResponse });
   } catch (err) {
     console.error("ProcessTerms Error:", err.message);
