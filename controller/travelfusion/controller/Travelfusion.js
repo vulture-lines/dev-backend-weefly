@@ -55,8 +55,8 @@ const startRouting = async (req, res) => {
       destination,
       dateOfSearch,
       returnDateOfSearch, // for return trips
-      maxChanges = 1,
-      maxHops = 2,
+      // maxChanges = 1,
+      // maxHops = 2,
       timeout = 40,
       travellers = [],
       incrementalResults = true,
@@ -96,8 +96,8 @@ const startRouting = async (req, res) => {
               DateOfSearch: returnDateOfSearch,
             },
           }),
-          MaxChanges: maxChanges,
-          MaxHops: maxHops,
+          // MaxChanges: maxChanges,
+          // MaxHops: maxHops,
           Timeout: timeout,
           TravellerList: {
             Traveller: travellers.map((age) => ({ Age: age })),
