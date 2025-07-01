@@ -180,7 +180,7 @@ const checkRouting = async (req, res) => {
 
     const parsed = await parseStringPromise(response.data);
     const checkRoutingResponse = parsed?.CommandList?.CheckRouting?.[0];
-
+    return res.status(200).send(response.data);
     res.status(200).json({ data: checkRoutingResponse });
   } catch (err) {
     console.error("CheckRouting Error:", err.message);
