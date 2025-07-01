@@ -112,6 +112,9 @@ const startRouting = async (req, res) => {
 
     const routingXml = builder.buildObject(startRoutingObj);
 
+    return res.status(200).send(routingXml);
+
+    
     const response = await axios.post(
       "https://api.travelfusion.com",
       routingXml,
@@ -135,6 +138,7 @@ const startRouting = async (req, res) => {
         requestdata: response.data,
       });
     }
+  
 
     res.status(200).json({
       routingId: startRoutingResponse.RoutingId[0],
