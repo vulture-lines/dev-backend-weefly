@@ -80,12 +80,12 @@ const startRouting = async (req, res) => {
           Mode: mode,
           Origin: {
             Descriptor: origin.descriptor,
-            Type: origin.type,
+            Type: "airportcode",
           },
           Destination: {
             Descriptor: destination.descriptor,
-            Type: destination.type,
-            Radius: destination.radius || 1000,
+            Type: "airportcode",
+            // Radius: destination.radius || 1000,
           },
           OutwardDates: {
             DateOfSearch: dateOfSearch,
@@ -127,7 +127,7 @@ const startRouting = async (req, res) => {
     const startRoutingResponse = parsed?.CommandList?.StartRouting?.[0];
 
     if (!startRoutingResponse?.RoutingId?.[0]) {
-      return res.status(500).json({
+      return res.status(422).json({
         error: "No RoutingId returned",
         requestdata: response.data,
       });
@@ -135,7 +135,7 @@ const startRouting = async (req, res) => {
 
     res.status(200).json({
       routingId: startRoutingResponse.RoutingId[0],
-      routerList: startRoutingResponse.RouterList || [],
+      // routerList: startRoutingResponse.RouterList || [],
     });
   } catch (err) {
     console.error("StartRouting Error:", err.message);
