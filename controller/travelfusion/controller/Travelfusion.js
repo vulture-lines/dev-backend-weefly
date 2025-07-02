@@ -174,6 +174,7 @@ const checkRouting = async (req, res) => {
     );
 
     const parsed = await parseStringPromise(response.data);
+    return res.status(200).send(response.data)
     const checkRoutingResponse = parsed?.CommandList?.CheckRouting?.[0];
     const routeId = checkRoutingResponse.RoutingId;
     const flightList = checkRoutingResponse.RouterList;
