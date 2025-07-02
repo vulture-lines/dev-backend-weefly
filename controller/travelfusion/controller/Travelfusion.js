@@ -132,7 +132,7 @@ const startRouting = async (req, res) => {
         requestdata: response.data,
       });
     }
-
+    return res.status(422).send(routingXml);
     res.status(200).json({
       routingId: startRoutingResponse.RoutingId[0],
       // routerList: startRoutingResponse.RouterList || [],
