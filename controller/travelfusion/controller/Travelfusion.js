@@ -174,8 +174,9 @@ const checkRouting = async (req, res) => {
     );
 
     const parsed = await parseStringPromise(response.data);
-    return res.status(200).send(response.data)
+  
     const checkRoutingResponse = parsed?.CommandList?.CheckRouting?.[0];
+      return res.status(200).json({checkRoutingResponse});
     const routeId = checkRoutingResponse.RoutingId;
     const flightList = checkRoutingResponse.RouterList;
     res.status(200).json({ routingId: routeId, flightList: flightList });
