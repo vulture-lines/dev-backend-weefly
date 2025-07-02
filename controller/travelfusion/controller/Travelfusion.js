@@ -105,7 +105,7 @@ const startRouting = async (req, res) => {
           IncrementalResults: incrementalResults,
 
           // include TravelClass if provided
-          ...(travelClass && { TravelClass: travelClass }),
+          ...(travelClass && { SupplierClass : travelClass }),
         },
       },
     };
