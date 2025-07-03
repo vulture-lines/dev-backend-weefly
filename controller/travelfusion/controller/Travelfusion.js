@@ -707,9 +707,9 @@ const getAirports = async (req, res) => {
     });
 
     const parsed = await parseStringPromise(response.data);
-
+    const airports=parsed?.CommandList?.GetAirportsData[0]?.AirportList[0]?.Airport[0]
     res.status(200).json({
-      Airportdata: parsed,
+      Airportdata: airports,
     });
   } catch (error) {
     console.error("Getting Airport Code Error", error.message);
