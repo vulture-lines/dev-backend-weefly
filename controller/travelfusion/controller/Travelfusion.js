@@ -331,7 +331,12 @@ const processTerms = async (req, res) => {
     // parse XML response
     const parsed = await parseStringPromise(response.data);
     const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
-    res.status(200).json({ data: termsResponse });
+    if (termsResponse && Object.keys(termsResponse).length > 0) {
+      res.status(200).json({ data: termsResponse });
+    } else {
+      // fallback: send raw XML
+      res.status(200).send(response.data);
+    }
   } catch (err) {
     console.error("ProcessTerms Error:", err.message);
     res.status(500).json({ error: err.message });
@@ -711,7 +716,8 @@ const getAirports = async (req, res) => {
     const simplifiedAirports = airports.map((airport) => {
       return {
         Iata: airport.IataCode?.[0] || null,
-        Airportname: airport.AirportNameList?.[0]?.AirportName?.[0]?.Name?.[0] || null,
+        Airportname:
+          airport.AirportNameList?.[0]?.AirportName?.[0]?.Name?.[0] || null,
         Cityname: airport.City?.[0]?.CityName?.[0] || null,
         Countrycode: airport.Country?.[0]?.CountryCode?.[0] || null,
         Countryname: airport.Country?.[0]?.CountryName?.[0] || null,
