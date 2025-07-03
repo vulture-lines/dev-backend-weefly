@@ -707,7 +707,7 @@ const getAirports = async (req, res) => {
     });
 
     const parsed = await parseStringPromise(response.data);
-    const airports=parsed?.CommandList?.GetAirportsData[0]?.AirportList[0]?.Airport[0]
+    const airports=parsed?.CommandList?.GetAirportsData[0]?.AirportList[0]?.Airport
     res.status(200).json({
       Airportdata: airports,
     });
