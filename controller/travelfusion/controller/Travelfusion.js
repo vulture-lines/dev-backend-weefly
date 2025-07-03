@@ -380,7 +380,6 @@ const startBooking = async (req, res) => {
       },
       timeout: 120000,
     });
-     return res.status(200).send(response.data);
 
     const parsed = await parseStringPromise(response.data);
     const result = parsed?.CommandList?.StartBooking?.[0];
