@@ -227,13 +227,11 @@ const processDetails = async (req, res) => {
     });
     const parsed = await parseStringPromise(response.data);
     const processResponse = parsed?.CommandList?.ProcessDetails?.[0];
-
-    res.status(200).json({
-      processResponse
-    });
-    // res
-    //   .status(200)
-    //   .json({ routingId: routeId, selectedFlightList: flightList });
+    const routeId = processResponse.RoutingId;
+    const flightList = processResponse.Router;
+    res
+      .status(200)
+      .json({ routingId: routeId, flightList });
   } catch (err) {
     console.error("ProcessDetails Error:", err.message);
     res.status(500).json({ error: err.message });
