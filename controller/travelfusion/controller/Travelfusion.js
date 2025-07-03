@@ -711,12 +711,11 @@ const getAirports = async (req, res) => {
       parsed?.CommandList?.GetAirportsData[0]?.AirportList[0]?.Airport;
     const simplifiedAirports = airports.map((airport) => {
       return {
-        iata: airport.IataCode?.[0] || null,
-        name: airport.AirportNameList?.[0]?.AirportName?.[0]?.Name?.[0] || null,
-        city: airport.City?.[0]?.CityName?.[0] || null,
-        state: null, // no state info in original data
-        country: airport.Country?.[0]?.CountryCode?.[0] || null,
-        countryName: airport.Country?.[0]?.CountryName?.[0] || null,
+        Iata: airport.IataCode?.[0] || null,
+        Airportname: airport.AirportNameList?.[0]?.AirportName?.[0]?.Name?.[0] || null,
+        Cityname: airport.City?.[0]?.CityName?.[0] || null,
+        Countrycode: airport.Country?.[0]?.CountryCode?.[0] || null,
+        Countryname: airport.Country?.[0]?.CountryName?.[0] || null,
       };
     });
     res.status(200).json({
