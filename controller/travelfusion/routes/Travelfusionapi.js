@@ -14,6 +14,7 @@ const {
   checkBookingCancelPlane,
   getBranchSupplierList,
   getCurrencyList,
+  getAirports,
 } = require("../controller/Travelfusion");
 
 // POST /api/start-routing
@@ -32,4 +33,5 @@ router.post("/cancel-booking", startBookingCancelPlane);
 router.post("/get-cancellationstatus", checkBookingCancelPlane);
 router.get("/get-supplierlist", getBranchSupplierList);
 router.get("/get-currencylist", getCurrencyList);
+router.get("/get-airportlist", getAirports);
 module.exports = router;

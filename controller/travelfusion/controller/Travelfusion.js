@@ -105,7 +105,7 @@ const startRouting = async (req, res) => {
           IncrementalResults: incrementalResults,
 
           // include TravelClass if provided
-          ...(travelClass && { SupplierClass : travelClass }),
+          ...(travelClass && { SupplierClass: travelClass }),
         },
       },
     };
@@ -174,9 +174,9 @@ const checkRouting = async (req, res) => {
     );
 
     const parsed = await parseStringPromise(response.data);
-  
+
     const checkRoutingResponse = parsed?.CommandList?.CheckRouting?.[0];
-      // return res.status(200).json({checkRoutingResponse});
+    // return res.status(200).json({checkRoutingResponse});
     const routeId = checkRoutingResponse?.RoutingId;
     const flightList = checkRoutingResponse?.RouterList;
     res.status(200).json({ routingId: routeId, flightList: flightList });
@@ -229,7 +229,9 @@ const processDetails = async (req, res) => {
     const processResponse = parsed?.CommandList?.ProcessDetails?.[0];
     const routeId = processResponse.RoutingId;
     const flightList = processResponse.Router;
-    res.status(200).json({ routingId: routeId, selectedFlightList: flightList });
+    res
+      .status(200)
+      .json({ routingId: routeId, selectedFlightList: flightList });
   } catch (err) {
     console.error("ProcessDetails Error:", err.message);
     res.status(500).json({ error: err.message });
@@ -645,18 +647,18 @@ const checkBookingCancelPlane = async (req, res) => {
 
 const getCurrencyList = async (req, res) => {
   try {
-
     const loginId = await fetchLoginID();
 
     const builder = new Builder({ headless: true });
 
-    const currencyObj= {
+    const currencyObj = {
       CommandList: {
-        GetCurrencies:{
+        GetCurrencies: {
           XmlLoginId: loginId,
           LoginId: loginId,
         },
-      }};
+      },
+    };
 
     const xml = builder.buildObject(currencyObj);
 
@@ -671,10 +673,46 @@ const getCurrencyList = async (req, res) => {
     const parsed = await parseStringPromise(response.data);
 
     res.status(200).json({
-      Currencydata:parsed
+      Currencydata: parsed,
     });
   } catch (err) {
-    console.error("CheckBooking Error:", err.message);
+    console.error("Getting Currency Error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const getAirports = async (req, res) => {
+  try {
+    const loginId = await fetchLoginID();
+
+    const builder = new Builder({ headless: true });
+
+    const currencyObj = {
+      CommandList: {
+        GetAirportsData: {
+          XmlLoginId: loginId,
+          LoginId: loginId,
+        },
+      },
+    };
+
+    const xml = builder.buildObject(currencyObj);
+
+    const response = await axios.post("https://api.travelfusion.com", xml, {
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        Accept: "text/xml",
+      },
+      timeout: 120000,
+    });
+
+    const parsed = await parseStringPromise(response.data);
+
+    res.status(200).json({
+      Airportdata: parsed,
+    });
+  } catch (error) {
+    console.error("Getting Airport Code Error", error.message);
     res.status(500).json({ error: err.message });
   }
 };
@@ -691,5 +729,6 @@ module.exports = {
   startBookingCancelPlane,
   checkBookingCancelPlane,
   getBranchSupplierList,
-  getCurrencyList
+  getCurrencyList,
+  getAirports,
 };
