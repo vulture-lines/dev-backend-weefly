@@ -228,7 +228,7 @@ const processDetails = async (req, res) => {
     const parsed = await parseStringPromise(response.data);
     const processResponse = parsed?.CommandList?.ProcessDetails?.[0];
     const routeId = processResponse.RoutingId;
-    const flightList = processResponse.Router.GroupList;
+    const flightList = processResponse.Router;
     const requiredDetails = processResponse.Router.RequiredParameterList;
     res
       .status(200)
