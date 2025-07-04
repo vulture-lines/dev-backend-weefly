@@ -256,6 +256,8 @@ const processTerms = async (req, res) => {
       routingId,
       bookingProfile,
       seatOptions = [],
+      outwardLuggageOptions = [],
+      returnLuggageOptions = [],
       outwardId,
       returnId = null,
     } = req.body;
@@ -282,6 +284,8 @@ const processTerms = async (req, res) => {
 
       travellers = travellers.map((traveller, index) => {
         const seat = seatOptions[index] || "";
+        const outwardLuggage = outwardLuggageOptions[index] || "";
+        const returnLuggage = returnLuggageOptions[index] || "";
 
         // get existing CSPs
         let csps =
@@ -297,6 +301,19 @@ const processTerms = async (req, res) => {
           csps.push({
             Name: "SeatOptions",
             Value: `${seat};`,
+          });
+        }
+        if (outwardLuggage) {
+          csps.push({
+            Name: "OutwardLuggageOptions",
+            Value: `${outwardLuggage};`,
+          });
+        }
+
+        if (returnLuggage) {
+          csps.push({
+            Name: "ReturnLuggageOptions",
+            Value: `${returnLuggage};`,
           });
         }
 
