@@ -369,7 +369,11 @@ const processTerms = async (req, res) => {
     const parsed = await parseStringPromise(response.data);
     const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
     if (termsResponse && Object.keys(termsResponse).length > 0) {
-      res.status(200).json({ data: termsResponse });
+      const routeID = termsResponse.RoutingId;
+      const bookingId = termsResponse.TFBookingReference;
+      res
+        .status(200)
+        .json({ RoutingId: routeID, TFBookingReference: bookingId });
     } else {
       // fallback: send raw XML
       res.status(200).send(response.data);
