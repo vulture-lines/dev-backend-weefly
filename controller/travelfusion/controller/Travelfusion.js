@@ -306,14 +306,14 @@ const processTerms = async (req, res) => {
         if (outwardLuggage) {
           csps.push({
             Name: "OutwardLuggageOptions",
-            Value: `${outwardLuggage};`,
+            Value: `${outwardLuggage}`,
           });
         }
 
         if (returnLuggage) {
           csps.push({
             Name: "ReturnLuggageOptions",
-            Value: `${returnLuggage};`,
+            Value: `${returnLuggage}`,
           });
         }
 
