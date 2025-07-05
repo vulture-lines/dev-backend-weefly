@@ -80,8 +80,8 @@ const startRouting = async (req, res) => {
           Mode: mode,
           Origin: {
             Descriptor: origin.descriptor,
-            // Type: "airportcode",
-            Type: "airportgroup",
+            Type: "airportcode",
+            // Type: "airportgroup",
           },
           Destination: {
             Descriptor: destination.descriptor,
@@ -171,7 +171,6 @@ const checkRouting = async (req, res) => {
         timeout: 120000,
       }
     );
-    return res.status(200).send(checkRoutingXml);
 
     const parsed = await parseStringPromise(response.data);
 
