@@ -126,14 +126,13 @@ const startRouting = async (req, res) => {
     );
     const parsed = await parseStringPromise(response.data);
     const startRoutingResponse = parsed?.CommandList?.StartRouting?.[0];
-    res.status(200).send(routingXml);
     if (!startRoutingResponse?.RoutingId?.[0]) {
       return res.status(422).json({
         error: "No RoutingId returned",
         requestdata: response.data,
       });
     }
-    // return res.status(422).send(routingXml);
+    return res.status(422).send(response.data);
     res.status(200).json({
       routingId: startRoutingResponse.RoutingId[0],
       // routerList: startRoutingResponse.RouterList || [],
