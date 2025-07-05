@@ -86,7 +86,7 @@ const startRouting = async (req, res) => {
           Destination: {
             Descriptor: destination.descriptor,
             Type: "airportcode",
-            Radius: destination.radius || 1000,
+            // Radius: destination.radius || 1000,
           },
           OutwardDates: {
             DateOfSearch: dateOfSearch,
