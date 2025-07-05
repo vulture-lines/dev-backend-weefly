@@ -171,6 +171,7 @@ const checkRouting = async (req, res) => {
         timeout: 120000,
       }
     );
+    return res.status(200).send(checkRoutingXml);
 
     const parsed = await parseStringPromise(response.data);
 
