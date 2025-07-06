@@ -5,10 +5,12 @@ const { Builder } = require("xml2js");
 const { parseStringPromise } = require("xml2js");
 const { fetchLoginID } = require("../Loginidgenerator"); // Import the login function
 
+const travelFusionUrl=process.env.TRAVEL_FUSION_API_URL;
+
 const getBranchSupplierList = async (req, res) => {
   try {
-    // get loginId
-    const loginId = await fetchLoginID(); // your function to get login ID
+
+    const loginId = await fetchLoginID(); 
 
     // build the XML structure
     const builder = new Builder({ headless: true });
@@ -26,7 +28,7 @@ const getBranchSupplierList = async (req, res) => {
 
     // send it to Travelfusion
     const response = await axios.post(
-      "https://api.travelfusion.com",
+      travelFusionUrl,
       requestXml,
       {
         headers: {
@@ -114,7 +116,7 @@ const startRouting = async (req, res) => {
     const routingXml = builder.buildObject(startRoutingObj);
 
     const response = await axios.post(
-      "https://api.travelfusion.com",
+      travelFusionUrl,
       routingXml,
       {
         headers: {
@@ -161,7 +163,7 @@ const checkRouting = async (req, res) => {
     });
 
     const response = await axios.post(
-      "https://api.travelfusion.com",
+      travelFusionUrl,
       checkRoutingXml,
       {
         headers: {
@@ -217,7 +219,7 @@ const processDetails = async (req, res) => {
     const builder = new Builder({ headless: true });
     const xml = builder.buildObject(requestObj);
 
-    const response = await axios.post("https://api.travelfusion.com", xml, {
+    const response = await axios.post(travelFusionUrl, xml, {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
@@ -357,7 +359,7 @@ const processTerms = async (req, res) => {
     const builder = new Builder({ headless: true });
     const xml = builder.buildObject(requestObj);
     // send to TravelFusion
-    const response = await axios.post("https://api.travelfusion.com", xml, {
+    const response = await axios.post(travelFusionUrl, xml, {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
@@ -415,7 +417,7 @@ const startBooking = async (req, res) => {
 
     const xml = builder.buildObject(startBookingObj);
 
-    const response = await axios.post("https://api.travelfusion.com", xml, {
+    const response = await axios.post(travelFusionUrl, xml, {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
@@ -460,7 +462,7 @@ const checkBooking = async (req, res) => {
 
     const xml = builder.buildObject(checkBookingObj);
 
-    const response = await axios.post("https://api.travelfusion.com", xml, {
+    const response = await axios.post(travelFusionUrl, xml, {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
@@ -501,7 +503,7 @@ const getBookingDetails = async (req, res) => {
 
     const xml = builder.buildObject(getBookingObj);
 
-    const response = await axios.post("https://api.travelfusion.com", xml, {
+    const response = await axios.post(travelFusionUrl, xml, {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
@@ -556,7 +558,7 @@ const getBookingDetailsForCancellation = async (req, res) => {
 
     const builder = new Builder({ headless: true });
     const xml = builder.buildObject(requestObj);
-    const response = await axios.post("https://api.travelfusion.com", xml, {
+    const response = await axios.post(travelFusionUrl, xml, {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
@@ -618,7 +620,7 @@ const startBookingCancelPlane = async (req, res) => {
     const builder = new Builder({ headless: true });
     const xml = builder.buildObject(requestObj);
 
-    const response = await axios.post("https://api.travelfusion.com", xml, {
+    const response = await axios.post(travelFusionUrl, xml, {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
@@ -660,7 +662,7 @@ const checkBookingCancelPlane = async (req, res) => {
     const builder = new Builder({ headless: true });
     const xml = builder.buildObject(requestObj);
 
-    const response = await axios.post("https://api.travelfusion.com", xml, {
+    const response = await axios.post(travelFusionUrl, xml, {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
@@ -702,7 +704,7 @@ const getCurrencyList = async (req, res) => {
 
     const xml = builder.buildObject(currencyObj);
 
-    const response = await axios.post("https://api.travelfusion.com", xml, {
+    const response = await axios.post(travelFusionUrl, xml, {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
@@ -738,7 +740,7 @@ const getAirports = async (req, res) => {
 
     const xml = builder.buildObject(currencyObj);
 
-    const response = await axios.post("https://api.travelfusion.com", xml, {
+    const response = await axios.post(travelFusionUrl, xml, {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
