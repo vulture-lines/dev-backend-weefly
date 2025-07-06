@@ -433,9 +433,7 @@ const startBooking = async (req, res) => {
         routerInfo: result?.Router
       });
     } else {
-      return res.status(200).json({
-        requesteddata: response.data,
-      });
+      return res.status(200).send(response.data)
     }
   } catch (err) {
     console.error("StartBooking Error:", err.message);
