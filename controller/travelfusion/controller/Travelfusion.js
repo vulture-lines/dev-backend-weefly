@@ -427,10 +427,10 @@ const startBooking = async (req, res) => {
 
     const parsed = await parseStringPromise(response.data);
     const result = parsed?.CommandList?.StartBooking?.[0];
-    if (result !== "") {
+    if (result) {
       res.status(200).json({
         bookingReference: result?.TFBookingReference?.[0],
-        routerInfo: result?.Router || null,
+        routerInfo: result?.Router
       });
     } else {
       return res.status(200).json({
