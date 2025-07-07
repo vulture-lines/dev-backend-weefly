@@ -5,12 +5,11 @@ const { Builder } = require("xml2js");
 const { parseStringPromise } = require("xml2js");
 const { fetchLoginID } = require("../Loginidgenerator"); // Import the login function
 
-const travelFusionUrl=process.env.TRAVEL_FUSION_API_URL;
+const travelFusionUrl = process.env.TRAVEL_FUSION_API_URL;
 
 const getBranchSupplierList = async (req, res) => {
   try {
-
-    const loginId = await fetchLoginID(); 
+    const loginId = await fetchLoginID();
 
     // build the XML structure
     const builder = new Builder({ headless: true });
@@ -27,17 +26,13 @@ const getBranchSupplierList = async (req, res) => {
     const requestXml = builder.buildObject(requestObj);
 
     // send it to Travelfusion
-    const response = await axios.post(
-      travelFusionUrl,
-      requestXml,
-      {
-        headers: {
-          "Content-Type": "text/xml; charset=utf-8",
-          Accept: "text/xml",
-        },
-        timeout: 120000,
-      }
-    );
+    const response = await axios.post(travelFusionUrl, requestXml, {
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        Accept: "text/xml",
+      },
+      timeout: 120000,
+    });
 
     // parse the XML response to JS
     const parsed = await parseStringPromise(response.data);
@@ -115,17 +110,13 @@ const startRouting = async (req, res) => {
 
     const routingXml = builder.buildObject(startRoutingObj);
 
-    const response = await axios.post(
-      travelFusionUrl,
-      routingXml,
-      {
-        headers: {
-          "Content-Type": "text/xml; charset=utf-8",
-          Accept: "text/xml",
-        },
-        timeout: 120000,
-      }
-    );
+    const response = await axios.post(travelFusionUrl, routingXml, {
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        Accept: "text/xml",
+      },
+      timeout: 120000,
+    });
     const parsed = await parseStringPromise(response.data);
     const startRoutingResponse = parsed?.CommandList?.StartRouting?.[0];
     if (!startRoutingResponse?.RoutingId?.[0]) {
@@ -162,17 +153,13 @@ const checkRouting = async (req, res) => {
       },
     });
 
-    const response = await axios.post(
-      travelFusionUrl,
-      checkRoutingXml,
-      {
-        headers: {
-          "Content-Type": "text/xml; charset=utf-8",
-          Accept: "text/xml",
-        },
-        timeout: 120000,
-      }
-    );
+    const response = await axios.post(travelFusionUrl, checkRoutingXml, {
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        Accept: "text/xml",
+      },
+      timeout: 120000,
+    });
 
     const parsed = await parseStringPromise(response.data);
 
@@ -430,10 +417,10 @@ const startBooking = async (req, res) => {
     if (result) {
       res.status(200).json({
         bookingReference: result?.TFBookingReference?.[0],
-        routerInfo: result?.Router
+        routerInfo: result?.Router,
       });
     } else {
-      return res.status(200).send(response.data)
+      return res.status(200).send(response.data);
     }
   } catch (err) {
     console.error("StartBooking Error:", err.message);
@@ -569,7 +556,7 @@ const getBookingDetailsForCancellation = async (req, res) => {
     if (bookingDetails === "") {
       res.status(200).json({ data: bookingDetails });
     } else {
-      res.status(400).json({ requested: response.data });
+      res.status(400).send(response.data);
     }
   } catch (err) {
     console.error("GetBookingDetails Error:", err.message);
