@@ -3,7 +3,7 @@ require("dotenv").config();
 const axios = require("axios");
 const { Builder } = require("xml2js");
 const { parseStringPromise } = require("xml2js");
-const { fetchLoginID } = require("../Loginidgenerator"); // Import the login function
+const { fetchLoginID } = require("../../Loginidgenerator"); // Import the login function
 
 const travelFusionUrl = process.env.TRAVEL_FUSION_API_URL;
 

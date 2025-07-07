@@ -8,7 +8,7 @@ const userRoute = require("./routes/Userdetails.js");
 const otpRoute = require("./routes/Otproute.js");
 const sisproutes=require("./routes/SISPRoutes.js");
 const commissionRoutes=require("./routes/Commisionroutes.js");
-const travelFusionRoute=require("./controller/travelfusion/routes/Travelfusionapi.js")
+const travelFusionRoute=require("./api/travelfusion/flight/routes/Travelfusionflightapi.js")
 const connectDb = require("./config/Db.js");
 dotenv.config();
 const app = express();
