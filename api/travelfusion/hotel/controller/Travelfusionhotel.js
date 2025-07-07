@@ -14,7 +14,7 @@ const startRoutingHotel = async (req, res) => {
       checkinDate,
       checkoutDate,
       accommodationTypes = [],
-      // supplierList = [],
+      supplierList = [],
       timeout = 40,
       rooms = [],
     } = req.body;
@@ -44,9 +44,9 @@ const startRoutingHotel = async (req, res) => {
           CheckoutDates: {
             DateOfSearch: checkoutDate,
           },
-          // SupplierList: {
-          //   Supplier: supplierList,
-          // },
+          SupplierList: {
+            Supplier: supplierList,
+          },
           Timeout: timeout,
           AccommodationTypeList: {
             AccommodationType: accommodationTypes,
