@@ -14,7 +14,7 @@ const startRoutingHotel = async (req, res) => {
       checkinDate,
       checkoutDate,
       accommodationTypes = [],
-      supplierList = [],
+      // supplierList = [],
       timeout = 40,
       rooms = [],
     } = req.body;
@@ -44,9 +44,9 @@ const startRoutingHotel = async (req, res) => {
           CheckoutDates: {
             DateOfSearch: checkoutDate,
           },
-          SupplierList: {
-            Supplier: supplierList,
-          },
+          // SupplierList: {
+          //   Supplier: supplierList,
+          // },
           Timeout: timeout,
           AccommodationTypeList: {
             AccommodationType: accommodationTypes,
@@ -124,7 +124,7 @@ const checkRoutingHotel = async (req, res) => {
     const parsed = await parseStringPromise(response.data);
 
     const checkRoutingResponse = parsed?.CommandList?.CheckRouting?.[0];
-    return res.status(200).json({ checkRoutingResponse });
+    return res.status(200).json({ data: response.data });
     // const routeId = checkRoutingResponse?.RoutingId;
     // const flightList = checkRoutingResponse?.RouterList;
     // res.status(200).json({ routingId: routeId, flightList: flightList });
