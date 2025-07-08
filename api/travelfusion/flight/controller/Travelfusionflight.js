@@ -286,22 +286,22 @@ const processDetails = async (req, res) => {
     });
     const parsed = await parseStringPromise(response.data);
     const processResponse = parsed?.CommandList?.ProcessDetails?.[0];
-    // if (processResponse) {
-    //   res.status(200).json({ processResponse });
-    // } else {
-    //   res.status(200).send(response.data);
-    // }
-    const router = processResponse?.Router?.[0];
+    if (processResponse) {
+      res.status(200).json({ processResponse });
+    } else {
+      res.status(200).send(response.data);
+    }
+    // const router = processResponse?.Router?.[0];
 
-    const requiredParameterList = router?.RequiredParameterList || [];
-    const groupList = router?.GroupList || [];
-    const routeid = processResponse?.RoutingId?.[0] || null;
+    // const requiredParameterList = router?.RequiredParameterList || [];
+    // const groupList = router?.GroupList || [];
+    // const routeid = processResponse?.RoutingId?.[0] || null;
 
-    res.status(200).json({
-      routeid,
-      requiredParameterList,
-      groupList,
-    });
+    // res.status(200).json({
+    //   routeid,
+    //   requiredParameterList,
+    //   groupList,
+    // });
   } catch (err) {
     console.error("ProcessDetails Error:", err.message);
     res.status(500).json({ error: err.message });

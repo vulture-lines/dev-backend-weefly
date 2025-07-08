@@ -281,8 +281,7 @@ exports.Paymentresponse = async (req, res) => {
         });
         console.log("start-booking response", startBookingResult);
         const TFBookingReference = bookingDetails.TFBookingReference;
-        await new Promise((resolve) => setTimeout(resolve, 10000));
-
+        await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
         const checkBookingResponse = await fetch(
           `${travelFusionApi}/check-booking`,
           {
