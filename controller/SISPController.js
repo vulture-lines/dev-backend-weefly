@@ -240,7 +240,7 @@ exports.Paymentresponse = async (req, res) => {
   const successMessageTypes = ["8", "10", "M", "P"];
   const body = req.body;
   console.log("Payment response received:", body);
-
+  const travelFusionApi=process.env.FLIGHT_API;
   if (successMessageTypes.includes(body.messageType)) {
     const calculatedFingerprint = generateFingerprintForResponse(
       posAuthCode,
@@ -272,7 +272,7 @@ exports.Paymentresponse = async (req, res) => {
           }
         );
         const bookingDetails = updatedPayment.TravelfusionBookingDetails;
-        await fetch("http://13.203.3.222:5000/flightapi/start-booking", {
+        await fetch(`${travelFusionApi}/start-booking`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -284,7 +284,7 @@ exports.Paymentresponse = async (req, res) => {
         await new Promise((resolve) => setTimeout(resolve, 10000));
 
         const checkBookingResponse = await fetch(
-          "http://13.203.3.222:5000/flightapi/check-booking",
+          `${travelFusionApi}/check-booking`,
           {
             method: "POST",
             headers: {

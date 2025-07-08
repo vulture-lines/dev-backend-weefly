@@ -173,7 +173,7 @@ const checkRouting = async (req, res) => {
     });
 
     const parsed = await parseStringPromise(response.data);
-
+    return res.json({data:parsed})
     const checkRoutingResponse = parsed?.CommandList?.CheckRouting?.[0];
     // return res.status(200).json({checkRoutingResponse});
     const routeId = checkRoutingResponse?.RoutingId;
