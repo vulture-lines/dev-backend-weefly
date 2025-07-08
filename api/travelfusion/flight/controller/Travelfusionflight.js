@@ -57,7 +57,8 @@ const startRouting = async (req, res) => {
       timeout = 40,
       travellers = [],
       incrementalResults = true,
-      travelClass, // <-- added travelClass
+      travelClass, 
+      preferredLanguage,
     } = req.body;
 
     if (!origin || !destination || !dateOfSearch || travellers.length === 0) {
@@ -83,7 +84,7 @@ const startRouting = async (req, res) => {
           Destination: {
             Descriptor: destination.descriptor,
             Type: "airportcode",
-            // Radius: destination.radius || 1000,
+            Radius: 1000,
           },
           OutwardDates: {
             DateOfSearch: dateOfSearch,
@@ -98,7 +99,17 @@ const startRouting = async (req, res) => {
           // MaxHops: maxHops,
           Timeout: timeout,
           TravellerList: {
-            Traveller: travellers.map((age) => ({ Age: age })),
+            Traveller: travellers.map((age) => ({
+              Age: age,
+              ...(preferredLanguage && {
+                CustomSupplierParameterList: {
+                  CustomSupplierParameter: {
+                    Name: "PreferredLanguage",
+                    Value: preferredLanguage,
+                  },
+                },
+              }),
+            })),
           },
           IncrementalResults: incrementalResults,
 
