@@ -57,7 +57,7 @@ const startRouting = async (req, res) => {
       timeout = 40,
       travellers = [],
       incrementalResults = true,
-      travelClass, 
+      travelClass,
       preferredLanguage,
     } = req.body;
 
@@ -146,12 +146,13 @@ const startRouting = async (req, res) => {
   }
 };
 
-const checkRouting = async (req, res) => {
+/* const checkRouting = async (req, res) => {
   try {
     const { routingId } = req.body;
     if (!routingId)
       return res.status(400).json({ error: "RoutingId is required" });
 
+    
     const loginId = await fetchLoginID();
 
     const checkRoutingXml = new Builder({ headless: true }).buildObject({
@@ -173,17 +174,71 @@ const checkRouting = async (req, res) => {
     });
 
     const parsed = await parseStringPromise(response.data);
-    return res.json({data:parsed})
     const checkRoutingResponse = parsed?.CommandList?.CheckRouting?.[0];
-    // return res.status(200).json({checkRoutingResponse});
     const routeId = checkRoutingResponse?.RoutingId;
     const flightList = checkRoutingResponse?.RouterList;
+    const hasIncomplete = (flightList || []).find(
+      (router) => router?.Router?.Complete?.[0]?.toLowerCase() === "false"
+    );
+    if(hasIncomplete){
+      checkRoutingXml
+    }
+    res.status(200).json({ routingId: routeId, flightList: flightList });
+  } catch (err) {
+    console.error("CheckRouting Error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+}; */
+
+const checkRouting = async (req, res) => {
+  try {
+    const { routingId } = req.body;
+    if (!routingId) {
+      return res.status(400).json({ error: "RoutingId is required" });
+    }
+
+    let flightList = [];
+    let routeId = "";
+    let hasIncomplete = true;
+
+    while (hasIncomplete) {
+      const loginId = await fetchLoginID(); // start of the rerun part
+
+      const checkRoutingXml = new Builder({ headless: true }).buildObject({
+        CommandList: {
+          CheckRouting: {
+            XmlLoginId: loginId,
+            LoginId: loginId,
+            RoutingId: routingId,
+          },
+        },
+      });
+
+      const response = await axios.post(travelFusionUrl, checkRoutingXml, {
+        headers: {
+          "Content-Type": "text/xml; charset=utf-8",
+          Accept: "text/xml",
+        },
+        timeout: 120000,
+      });
+
+      const parsed = await parseStringPromise(response.data);
+      const checkRoutingResponse = parsed?.CommandList?.CheckRouting?.[0];
+      routeId = checkRoutingResponse?.RoutingId;
+      flightList = checkRoutingResponse?.RouterList;
+
+      hasIncomplete = (flightList || []).some(
+        (router) => router?.Router?.Complete?.[0]?.toLowerCase() === "false"
+      );
+    }
+
     res.status(200).json({ routingId: routeId, flightList: flightList });
   } catch (err) {
     console.error("CheckRouting Error:", err.message);
     res.status(500).json({ error: err.message });
   }
 };
+
 
 const processDetails = async (req, res) => {
   try {
@@ -421,7 +476,8 @@ const processTerms = async (req, res) => {
         const luggage = luggageOptions[index] || "";
 
         // Get existing CSPs
-        let csps = traveller.CustomSupplierParameterList?.CustomSupplierParameter || [];
+        let csps =
+          traveller.CustomSupplierParameterList?.CustomSupplierParameter || [];
 
         // Normalize to array
         if (!Array.isArray(csps)) {
