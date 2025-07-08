@@ -29,7 +29,9 @@ const getBranchSupplierList = async (req, res) => {
     const response = await axios.post(travelFusionUrl, requestXml, {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
+        "Accept-Encoding": "gzip, deflate",
         Accept: "text/xml",
+        "Accept-Encoding": "gzip, deflate",
       },
       timeout: 120000,
     });
@@ -125,6 +127,7 @@ const startRouting = async (req, res) => {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
+        "Accept-Encoding": "gzip, deflate",
       },
       timeout: 120000,
     });
@@ -218,6 +221,8 @@ const checkRouting = async (req, res) => {
         headers: {
           "Content-Type": "text/xml; charset=utf-8",
           Accept: "text/xml",
+
+          "Accept-Encoding": "gzip, deflate",
         },
         timeout: 120000,
       });
@@ -238,7 +243,6 @@ const checkRouting = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
 
 const processDetails = async (req, res) => {
   try {
@@ -276,6 +280,7 @@ const processDetails = async (req, res) => {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
+        "Accept-Encoding": "gzip, deflate",
       },
       timeout: 120000,
     });
@@ -558,6 +563,7 @@ const processTerms = async (req, res) => {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
+        "Accept-Encoding": "gzip, deflate",
       },
       timeout: 120000,
     });
@@ -617,6 +623,7 @@ const startBooking = async (req, res) => {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
+        "Accept-Encoding": "gzip, deflate",
       },
       timeout: 120000,
     });
@@ -660,6 +667,7 @@ const checkBooking = async (req, res) => {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
+        "Accept-Encoding": "gzip, deflate",
       },
       timeout: 120000,
     });
@@ -701,6 +709,7 @@ const getBookingDetails = async (req, res) => {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
+        "Accept-Encoding": "gzip, deflate",
       },
       timeout: 120000,
     });
@@ -756,6 +765,7 @@ const getBookingDetailsForCancellation = async (req, res) => {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
+        "Accept-Encoding": "gzip, deflate",
       },
       timeout: 120000,
     });
@@ -818,6 +828,7 @@ const startBookingCancelPlane = async (req, res) => {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
+        "Accept-Encoding": "gzip, deflate",
       },
       timeout: 120000,
     });
@@ -860,6 +871,7 @@ const checkBookingCancelPlane = async (req, res) => {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
+        "Accept-Encoding": "gzip, deflate",
       },
       timeout: 120000,
     });
@@ -902,6 +914,7 @@ const getCurrencyList = async (req, res) => {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
+        "Accept-Encoding": "gzip, deflate",
       },
       timeout: 120000,
     });
@@ -938,6 +951,7 @@ const getAirports = async (req, res) => {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
+        "Accept-Encoding": "gzip, deflate",
       },
       timeout: 120000,
     });
