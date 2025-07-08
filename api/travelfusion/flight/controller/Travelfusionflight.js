@@ -248,7 +248,7 @@ const processDetails = async (req, res) => {
   }
 };
 
-const processTerms = async (req, res) => {
+/*const processTerms = async (req, res) => {
   try {
     const {
       mode = "plane",
@@ -372,6 +372,148 @@ const processTerms = async (req, res) => {
     } else {
       // fallback: send raw XML
       res.status(200).send(response.data);
+    }
+  } catch (err) {
+    console.error("ProcessTerms Error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+}; */
+
+const processTerms = async (req, res) => {
+  try {
+    const {
+      mode = "plane",
+      routingId,
+      bookingProfile,
+      seatOptions = [],
+      luggageOptions = [],
+      outwardLuggageOptions = [],
+      returnLuggageOptions = [],
+      outwardId,
+      returnId = null,
+      countryOfUser, // <-- ISO 3166-1 alpha-2 country code, e.g., "GB"
+    } = req.body;
+
+    if (!routingId || !bookingProfile) {
+      return res.status(400).json({
+        error: "routingId and bookingProfile are required",
+      });
+    }
+
+    const loginId = await fetchLoginID();
+
+    // Deep copy bookingProfile to modify
+    let bookingProfileObj = JSON.parse(JSON.stringify(bookingProfile));
+
+    // Assign seat/luggage/CSPs per traveller
+    if (seatOptions.length && bookingProfileObj.TravellerList?.Traveller) {
+      let travellers = bookingProfileObj.TravellerList.Traveller;
+
+      // Wrap single traveller in array if needed
+      if (!Array.isArray(travellers)) {
+        travellers = [travellers];
+      }
+
+      travellers = travellers.map((traveller, index) => {
+        const seat = seatOptions[index] || "";
+        const outwardLuggage = outwardLuggageOptions[index] || "";
+        const returnLuggage = returnLuggageOptions[index] || "";
+        const luggage = luggageOptions[index] || "";
+
+        // Get existing CSPs
+        let csps = traveller.CustomSupplierParameterList?.CustomSupplierParameter || [];
+
+        // Normalize to array
+        if (!Array.isArray(csps)) {
+          csps = [csps];
+        }
+
+        // ✅ Add mandatory CountryOfTheUser
+        if (countryOfUser) {
+          csps.push({
+            Name: "CountryOfTheUser",
+            Value: countryOfUser,
+          });
+        }
+
+        // Optional: Add seat if present
+        if (seat) {
+          csps.push({
+            Name: "SeatOptions",
+            Value: `${seat};`,
+          });
+        }
+
+        // Optional: Add luggage
+        if (luggage) {
+          csps.push({
+            Name: "LuggageOptions",
+            Value: `${luggage}`,
+          });
+        } else {
+          if (outwardLuggage) {
+            csps.push({
+              Name: "OutwardLuggageOptions",
+              Value: `${outwardLuggage}`,
+            });
+          }
+          if (returnLuggage) {
+            csps.push({
+              Name: "ReturnLuggageOptions",
+              Value: `${returnLuggage}`,
+            });
+          }
+        }
+
+        return {
+          ...traveller,
+          CustomSupplierParameterList: {
+            CustomSupplierParameter: csps,
+          },
+        };
+      });
+
+      bookingProfileObj.TravellerList.Traveller = travellers;
+    }
+
+    // Build ProcessTerms object
+    const processTermsObj = {
+      XmlLoginId: loginId,
+      LoginId: loginId,
+      Mode: mode,
+      RoutingId: routingId,
+      OutwardId: outwardId,
+      ...(returnId ? { ReturnId: returnId } : {}),
+      BookingProfile: bookingProfileObj,
+    };
+
+    const requestObj = {
+      CommandList: {
+        ProcessTerms: processTermsObj,
+      },
+    };
+
+    // Convert to XML
+    const builder = new Builder({ headless: true });
+    const xml = builder.buildObject(requestObj);
+
+    // Send to TravelFusion
+    const response = await axios.post(travelFusionUrl, xml, {
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        Accept: "text/xml",
+      },
+      timeout: 120000,
+    });
+
+    // Parse XML response
+    const parsed = await parseStringPromise(response.data);
+    const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
+
+    if (termsResponse && Object.keys(termsResponse).length > 0) {
+      res.status(200).json({ data: termsResponse });
+    } else {
+      res.status(200).send(response.data); // fallback raw response
     }
   } catch (err) {
     console.error("ProcessTerms Error:", err.message);
