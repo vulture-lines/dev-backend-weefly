@@ -203,7 +203,7 @@ const checkRouting = async (req, res) => {
     let flightList = [];
     let routeId = "";
     let hasIncomplete = true;
-
+    let checkRoutingResponse = [];
     while (hasIncomplete) {
       const loginId = await fetchLoginID(); // start of the rerun part
 
@@ -228,7 +228,7 @@ const checkRouting = async (req, res) => {
       });
 
       const parsed = await parseStringPromise(response.data);
-      const checkRoutingResponse = parsed?.CommandList?.CheckRouting?.[0];
+      checkRoutingResponse = parsed?.CommandList?.CheckRouting?.[0];
       routeId = checkRoutingResponse?.RoutingId;
       flightList = checkRoutingResponse?.RouterList;
 
@@ -236,6 +236,7 @@ const checkRouting = async (req, res) => {
         (router) => router?.Router?.Complete?.[0]?.toLowerCase() === "false"
       );
     }
+    return res.status(200).json({ checkRoutingResponse });
 
     res.status(200).json({ routingId: routeId, flightList: flightList });
   } catch (err) {
