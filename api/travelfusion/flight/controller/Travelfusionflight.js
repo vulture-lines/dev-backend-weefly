@@ -219,6 +219,20 @@ const startRouting = async (req, res) => {
           IncrementalResults: incrementalResults,
           // include TravelClass if provided
           ...(travelClass && { SupplierClass: travelClass }),
+          BookingProfile: {
+            CustomSupplierParameterList: {
+              CustomSupplierParameter: [
+                {
+                  Name: "IncludeStructuredFeatures",
+                  Value: "y",
+                },
+                {
+                  Name: "IncludeAlternativeFares",
+                  Value: "y",
+                },
+              ],
+            },
+          },
         },
       },
     };
@@ -365,11 +379,17 @@ const processDetails = async (req, res) => {
           OutwardId: outwardId,
           HandoffParametersOnly: false,
           BookingProfile: {
-            CustomSupplierParameters: {
-              Parameter: {
-                Name: "IncludeStructuredFeatures",
-                Value: "y",
-              },
+            CustomSupplierParameterList: {
+              CustomSupplierParameter: [
+                {
+                  Name: "IncludeStructuredFeatures",
+                  Value: "y",
+                },
+                {
+                  Name: "IncludeAlternativeFares",
+                  Value: "y",
+                },
+              ],
             },
           },
         },
@@ -402,7 +422,7 @@ const processDetails = async (req, res) => {
 
     // return res.status(200).json({ processResponse });
 
-    return res.status(200).json({processResponse})
+    return res.status(200).json({ processResponse });
     const router = processResponse?.Router?.[0];
 
     const requiredParameterList = router?.RequiredParameterList || [];
