@@ -422,7 +422,7 @@ const processDetails = async (req, res) => {
 
     // return res.status(200).json({ processResponse });
 
-    return res.status(200).json({ processResponse });
+    // return res.status(200).json({ processResponse });
     const router = processResponse?.Router?.[0];
 
     const requiredParameterList = router?.RequiredParameterList || [];
@@ -430,11 +430,15 @@ const processDetails = async (req, res) => {
     const routeid = processResponse?.RoutingId?.[0] || null;
     const supportedCardlist =
       processResponse?.SupportedCardList?.[0].SupportedCArd?.[0];
+    const AlternativeFares=router?.AlternativeFares?.[0];
+    const Features=router?.Features?.[0];
     res.status(200).json({
       routeid,
       requiredParameterList,
       groupList,
       supportedCardlist,
+      AlternativeFares,
+      Features
     });
   } catch (err) {
     console.error("ProcessDetails Error:", err.message);
