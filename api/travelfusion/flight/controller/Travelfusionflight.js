@@ -979,52 +979,51 @@ const getAirports = async (req, res) => {
   }
 };
 
-const listSupplierRoutes = async (req, res) => {
+const getSupplierRoutes = async (req, res) => {
   try {
     const loginId = await fetchLoginID();
+    const supplier = "americanairlines"; // You can set supplier via query param
+
     const builder = new Builder({ headless: true });
 
-    const allSuppliersData = [];
-    const supplierList = ["americanairlines", "easyjet"];
-    for (const supplier of supplierList) {
-      const requestXml = builder.buildObject({
-        CommandList: {
-          ListSupplierRoutes: {
-            XmlLoginId: loginId,
-            LoginId: loginId,
-            Supplier: supplier,
-            OneWayOnlyAirportRoutes: false,
-          },
+    const routesObj = {
+      CommandList: {
+        ListSupplierRoutes: {
+          XmlLoginId: loginId,
+          LoginId: loginId,
+          Supplier: supplier,
+          OneWayOnlyAirportRoutes: false,
         },
-      });
+      },
+    };
 
-      const response = await axios.post(travelFusionUrl, requestXml, {
-        headers: {
-          "Content-Type": "text/xml; charset=utf-8",
-          Accept: "text/xml",
-          "Accept-Encoding": "gzip, deflate",
-        },
-        timeout: 120000,
-      });
+    const xml = builder.buildObject(routesObj);
 
-      const parsed = await parseStringPromise(response.data);
-      const routeData = parsed?.ListSupplierRoutes?.RouteList?.[0] || {};
+    const response = await axios.post(travelFusionUrl, xml, {
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        Accept: "text/xml",
+        "Accept-Encoding": "gzip, deflate",
+      },
+      timeout: 120000,
+    });
 
-      const airportRoutes = routeData.AirportRoutes || [];
-      const cityRoutes = routeData.CityRoutes || [];
+    const parsed = await parseStringPromise(response.data);
+    const routeList =
+      parsed?.ListSupplierRoutes?.RouteList?.[0] || {};
 
-      allSuppliersData.push({
-        supplier,
-        airportRoutes: airportRoutes.map((r) => r.trim()),
-        cityRoutes: cityRoutes.map((r) => r.trim()),
-      });
-    }
+    const airportRoutes = routeList?.AirportRoutes?.[0]?.split("\n").filter(Boolean) || [];
+    const cityRoutes = routeList?.CityRoutes?.[0]?.split("\n").filter(Boolean) || [];
 
     res.status(200).json({
-      supplierRoutes: allSuppliersData,
+      supplier,
+      routes: {
+        airportRoutes,
+        cityRoutes,
+      },
     });
   } catch (err) {
-    console.error("Error fetching supplier routes:", err.message);
+    console.error("Getting Supplier Routes Error", err.message);
     res.status(500).json({ error: err.message });
   }
 };
@@ -1043,5 +1042,5 @@ module.exports = {
   getBranchSupplierList,
   getCurrencyList,
   getAirports,
-  listSupplierRoutes
+  getSupplierRoutes
 };
