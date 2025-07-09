@@ -291,17 +291,18 @@ const processDetails = async (req, res) => {
     //   res.status(200).send(response.data);
     // }
 
-    return res.status(200).json({ processResponse });
+    // return res.status(200).json({ processResponse });
     const router = processResponse?.Router?.[0];
 
     const requiredParameterList = router?.RequiredParameterList || [];
     const groupList = router?.GroupList || [];
     const routeid = processResponse?.RoutingId?.[0] || null;
-
+    const supportedCardlist=processResponse?.SupportedCardList?.[0].SupportedCArd?.[0]
     res.status(200).json({
       routeid,
       requiredParameterList,
       groupList,
+      supportedCardlist
     });
   } catch (err) {
     console.error("ProcessDetails Error:", err.message);
@@ -979,55 +980,6 @@ const getAirports = async (req, res) => {
   }
 };
 
-// const getSupplierRoutes = async (req, res) => {
-//   try {
-//     const loginId = await fetchLoginID();
-//     const supplier = "easyjet"; // Or use req.query.supplier
-
-//     const builder = new Builder({ headless: true });
-
-//     const routesObj = {
-//       CommandList: {
-//         ListSupplierRoutes: {
-//           XmlLoginId: loginId,
-//           LoginId: loginId,
-//           Supplier: supplier,
-//           OneWayOnlyAirportRoutes: false,
-//         },
-//       },
-//     };
-
-//     const xml = builder.buildObject(routesObj);
-
-//     const response = await axios.post(travelFusionUrl, xml, {
-//       headers: {
-//         "Content-Type": "text/xml; charset=utf-8",
-//         Accept: "text/xml",
-//         "Accept-Encoding": "gzip, deflate",
-//       },
-//       timeout: 120000,
-//     });
-
-//     const parsed = await parseStringPromise(response.data);
-//     const routeList =
-//       parsed?.CommandList?.ListSupplierRoutes?.[0]?.RouteList?.[0];
-
-//     const airportRoutesRaw = routeList?.AirportRoutes?.[0] || "";
-//     const airportRoutes = airportRoutesRaw
-//       .split("\n")
-//       .map((r) => r.trim())
-//       .filter(Boolean)
-//       .map((route) => ({
-//         from: route.slice(0, 3),
-//         to: route.slice(3, 6),
-//       }));
-
-//     return res.status(200).json({ supplier, airportRoutes });
-//   } catch (err) {
-//     console.error("Getting Supplier Routes Error", err.message);
-//     res.status(500).json({ error: err.message });
-//   }
-// };
 
 const getSupplierRoutes = async (req, res) => {
   try {
