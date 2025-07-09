@@ -46,7 +46,7 @@ const getBranchSupplierList = async (req, res) => {
   }
 };
 
-const startRouting = async (req, res) => {
+/*const startRouting = async (req, res) => {
   try {
     const {
       mode = "plane",
@@ -139,6 +139,117 @@ const startRouting = async (req, res) => {
         requestdata: response.data,
       });
     }
+    res.status(200).json({
+      routingId: startRoutingResponse.RoutingId[0],
+      // routerList: startRoutingResponse.RouterList || [],
+    });
+  } catch (err) {
+    console.error("StartRouting Error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+}; */
+
+const startRouting = async (req, res) => {
+  try {
+    const {
+      mode = "plane",
+      origin,
+      destination,
+      dateOfSearch,
+      returnDateOfSearch, // for return trips
+      // maxChanges = 1,
+      // maxHops = 2,
+      timeout = 40,
+      travellers = [],
+      incrementalResults = true,
+      travelClass,
+      preferredLanguage,
+    } = req.body;
+
+    if (!origin || !destination || !dateOfSearch || travellers.length === 0) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // get loginId
+    const loginId = await fetchLoginID();
+
+    const builder = new Builder({ headless: true });
+
+    const startRoutingObj = {
+      CommandList: {
+        StartRouting: {
+          XmlLoginId: loginId,
+          LoginId: loginId,
+          Mode: mode,
+          Origin: {
+            Descriptor: origin.descriptor,
+            Type: "airportcode",
+            // Type: "airportgroup",
+          },
+          Destination: {
+            Descriptor: destination.descriptor,
+            Type: "airportcode",
+            Radius: 1000,
+          },
+          OutwardDates: {
+            DateOfSearch: dateOfSearch,
+          },
+          // if return date is provided
+          ...(returnDateOfSearch && {
+            ReturnDates: {
+              DateOfSearch: returnDateOfSearch,
+            },
+          }),
+          // MaxChanges: maxChanges,
+          // MaxHops: maxHops,
+          Timeout: timeout,
+          TravellerList: {
+            Traveller: travellers.map((age) => ({
+              Age: age,
+              ...(preferredLanguage && {
+                CustomSupplierParameterList: {
+                  CustomSupplierParameter: {
+                    Name: "PreferredLanguage",
+                    Value: preferredLanguage,
+                  },
+                },
+              }),
+            })),
+          },
+          IncrementalResults: incrementalResults,
+          BookingProfile: {
+            CustomSupplierParameters: {
+              Parameter: {
+                Name: "IncludeStructuredFeatures",
+                Value: "y",
+              },
+            },
+          },
+          // include TravelClass if provided
+          ...(travelClass && { SupplierClass: travelClass }),
+        },
+      },
+    };
+
+    const routingXml = builder.buildObject(startRoutingObj);
+
+    const response = await axios.post(travelFusionUrl, routingXml, {
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        Accept: "text/xml",
+        "Accept-Encoding": "gzip, deflate",
+      },
+      timeout: 120000,
+    });
+    const parsed = await parseStringPromise(response.data);
+    const startRoutingResponse = parsed?.CommandList?.StartRouting?.[0];
+    if (!startRoutingResponse?.RoutingId?.[0]) {
+      return res.status(422).json({
+        error: "No RoutingId returned",
+        requestdata: response.data,
+      });
+    }
+    return res.status(200).json({parsed})
     res.status(200).json({
       routingId: startRoutingResponse.RoutingId[0],
       // routerList: startRoutingResponse.RouterList || [],
@@ -297,12 +408,13 @@ const processDetails = async (req, res) => {
     const requiredParameterList = router?.RequiredParameterList || [];
     const groupList = router?.GroupList || [];
     const routeid = processResponse?.RoutingId?.[0] || null;
-    const supportedCardlist=processResponse?.SupportedCardList?.[0].SupportedCArd?.[0]
+    const supportedCardlist =
+      processResponse?.SupportedCardList?.[0].SupportedCArd?.[0];
     res.status(200).json({
       routeid,
       requiredParameterList,
       groupList,
-      supportedCardlist
+      supportedCardlist,
     });
   } catch (err) {
     console.error("ProcessDetails Error:", err.message);
@@ -980,7 +1092,6 @@ const getAirports = async (req, res) => {
   }
 };
 
-
 const getSupplierRoutes = async (req, res) => {
   try {
     const loginId = await fetchLoginID();
@@ -1035,7 +1146,6 @@ const getSupplierRoutes = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
 
 module.exports = {
   startRouting,
