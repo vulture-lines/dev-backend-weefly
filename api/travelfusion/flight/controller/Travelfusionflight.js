@@ -982,7 +982,7 @@ const getAirports = async (req, res) => {
 const getSupplierRoutes = async (req, res) => {
   try {
     const loginId = await fetchLoginID();
-    const supplier = "easyjet"; // You can set supplier via query param
+    const supplier = "easyjet"; // Or use req.query.supplier
 
     const builder = new Builder({ headless: true });
 
@@ -1009,16 +1009,25 @@ const getSupplierRoutes = async (req, res) => {
     });
 
     const parsed = await parseStringPromise(response.data);
-    const routeList =
-      parsed?.ListSupplierRoutes?.RouteList?.[0];
+    const routeList = parsed?.ListSupplierRoutes?.RouteList?.[0];
 
-    const airportRoutes = routeList?.AirportRoutes?.[0]?.split("\n").filter(Boolean) || [];
-    return res.status(200).send(parsed)
+    const airportRoutesRaw = routeList?.AirportRoutes?.[0] || "";
+    const airportRoutes = airportRoutesRaw
+      .split("\n")
+      .map((r) => r.trim())
+      .filter(Boolean)
+      .map((route) => ({
+        from: route.slice(0, 3),
+        to: route.slice(3, 6),
+      }));
+
+    return res.status(200).json({ supplier, airportRoutes });
   } catch (err) {
     console.error("Getting Supplier Routes Error", err.message);
     res.status(500).json({ error: err.message });
   }
 };
+
 
 module.exports = {
   startRouting,
