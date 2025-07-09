@@ -217,14 +217,6 @@ const startRouting = async (req, res) => {
             })),
           },
           IncrementalResults: incrementalResults,
-          BookingProfile: {
-            CustomSupplierParameters: {
-              Parameter: {
-                Name: "IncludeStructuredFeatures",
-                Value: "y",
-              },
-            },
-          },
           // include TravelClass if provided
           ...(travelClass && { SupplierClass: travelClass }),
         },
@@ -345,8 +337,6 @@ const checkRouting = async (req, res) => {
         (router) => router?.Router?.Complete?.[0]?.toLowerCase() === "false"
       );
     }
-    return res.status(200).send(parsed);
-
     res.status(200).json({ routingId: routeId, flightList: flightList });
   } catch (err) {
     console.error("CheckRouting Error:", err.message);
@@ -374,6 +364,14 @@ const processDetails = async (req, res) => {
           RoutingId: routingId,
           OutwardId: outwardId,
           HandoffParametersOnly: false,
+          BookingProfile: {
+            CustomSupplierParameters: {
+              Parameter: {
+                Name: "IncludeStructuredFeatures",
+                Value: "y",
+              },
+            },
+          },
         },
       },
     };
