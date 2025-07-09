@@ -1013,7 +1013,7 @@ const getSupplierRoutes = async (req, res) => {
       parsed?.ListSupplierRoutes?.RouteList?.[0];
 
     const airportRoutes = routeList?.AirportRoutes?.[0]?.split("\n").filter(Boolean) || [];
-    return res.status(200).send(airportRoutes)
+    return res.status(200).send(parsed)
   } catch (err) {
     console.error("Getting Supplier Routes Error", err.message);
     res.status(500).json({ error: err.message });
