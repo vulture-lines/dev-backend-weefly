@@ -982,7 +982,7 @@ const getAirports = async (req, res) => {
 const getSupplierRoutes = async (req, res) => {
   try {
     const loginId = await fetchLoginID();
-    const supplier = "americanairlines"; // You can set supplier via query param
+    const supplier = "easyjet"; // You can set supplier via query param
 
     const builder = new Builder({ headless: true });
 
@@ -1014,7 +1014,7 @@ const getSupplierRoutes = async (req, res) => {
 
     const airportRoutes = routeList?.AirportRoutes?.[0]?.split("\n").filter(Boolean) || [];
     const cityRoutes = routeList?.CityRoutes?.[0]?.split("\n").filter(Boolean) || [];
-    return res.status(200).send(xml)
+    return res.status(200).send(response.data)
   } catch (err) {
     console.error("Getting Supplier Routes Error", err.message);
     res.status(500).json({ error: err.message });
