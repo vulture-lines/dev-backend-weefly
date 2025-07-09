@@ -1009,17 +1009,19 @@ const getSupplierRoutes = async (req, res) => {
     });
 
     const parsed = await parseStringPromise(response.data);
-    const routeList = parsed?.ListSupplierRoutes?.RouteList?.[0];
+    const routeList = parsed?.CommandList?.ListSupplierRoutes?.[0]?.RouteList?.[0];
 
-    const airportRoutesRaw = routeList?.AirportRoutes?.[0] || "";
-    const airportRoutes = airportRoutesRaw
-      .split("\n")
-      .map((r) => r.trim())
-      .filter(Boolean)
-      .map((route) => ({
-        from: route.slice(0, 3),
-        to: route.slice(3, 6),
-      }));
+const airportRoutesRaw = routeList?.AirportRoutes?.[0] || "";
+const airportRoutes = airportRoutesRaw
+  .split("\n")
+  .map((r) => r.trim())
+  .filter(Boolean)
+  .map((route) => ({
+    from: route.slice(0, 3),
+    to: route.slice(3, 6),
+  }));
+
+
 
     return res.status(200).json({ supplier, airportRoutes });
   } catch (err) {
