@@ -15,6 +15,7 @@ const {
   getBranchSupplierList,
   getCurrencyList,
   getAirports,
+  listSupplierRoutes,
 } = require("../controller/Travelfusionflight");
 
 // POST /api/start-routing
@@ -34,4 +35,5 @@ router.post("/get-cancellationstatus", checkBookingCancelPlane);
 router.get("/get-supplierlist", getBranchSupplierList);
 router.get("/get-currencylist", getCurrencyList);
 router.get("/get-airportlist", getAirports);
+router.get("/get-supplierroute", listSupplierRoutes);
 module.exports = router;

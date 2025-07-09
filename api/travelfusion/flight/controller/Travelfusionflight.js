@@ -290,12 +290,14 @@ const processDetails = async (req, res) => {
     // } else {
     //   res.status(200).send(response.data);
     // }
+
+    return res.status(200).json({processResponse})
     const router = processResponse?.Router?.[0];
 
     const requiredParameterList = router?.RequiredParameterList || [];
     const groupList = router?.GroupList || [];
     const routeid = processResponse?.RoutingId?.[0] || null;
-
+ 
     res.status(200).json({
       routeid,
       requiredParameterList,
@@ -977,6 +979,56 @@ const getAirports = async (req, res) => {
   }
 };
 
+const listSupplierRoutes = async (req, res) => {
+  try {
+    const loginId = await fetchLoginID();
+    const builder = new Builder({ headless: true });
+
+    const allSuppliersData = [];
+    const supplierList = ["americanairlines", "easyjet"];
+    for (const supplier of supplierList) {
+      const requestXml = builder.buildObject({
+        CommandList: {
+          ListSupplierRoutes: {
+            XmlLoginId: loginId,
+            LoginId: loginId,
+            Supplier: supplier,
+            OneWayOnlyAirportRoutes: false,
+          },
+        },
+      });
+
+      const response = await axios.post(travelFusionUrl, requestXml, {
+        headers: {
+          "Content-Type": "text/xml; charset=utf-8",
+          Accept: "text/xml",
+          "Accept-Encoding": "gzip, deflate",
+        },
+        timeout: 120000,
+      });
+
+      const parsed = await parseStringPromise(response.data);
+      const routeData = parsed?.ListSupplierRoutes?.RouteList?.[0] || {};
+
+      const airportRoutes = routeData.AirportRoutes || [];
+      const cityRoutes = routeData.CityRoutes || [];
+
+      allSuppliersData.push({
+        supplier,
+        airportRoutes: airportRoutes.map((r) => r.trim()),
+        cityRoutes: cityRoutes.map((r) => r.trim()),
+      });
+    }
+
+    res.status(200).json({
+      supplierRoutes: allSuppliersData,
+    });
+  } catch (err) {
+    console.error("Error fetching supplier routes:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = {
   startRouting,
   checkRouting,
@@ -991,4 +1043,5 @@ module.exports = {
   getBranchSupplierList,
   getCurrencyList,
   getAirports,
+  listSupplierRoutes
 };
