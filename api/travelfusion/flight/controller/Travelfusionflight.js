@@ -401,6 +401,8 @@ const processDetails = async (req, res) => {
     // }
 
     // return res.status(200).json({ processResponse });
+
+    return res.status(200).json({processResponse})
     const router = processResponse?.Router?.[0];
 
     const requiredParameterList = router?.RequiredParameterList || [];
