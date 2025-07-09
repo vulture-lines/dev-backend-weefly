@@ -19,6 +19,7 @@ const threeDSServerUrl = process.env.THREEDS_SERVER_URL;
 const vinti4CvUrl = process.env.VINTI_FOUR_CV_URL;
 const paymentresponseurl = process.env.PAYMENT_RESPONSE_URL;
 
+console.log(posID);
 // Helper functions
 function toBase64(u8) {
   return btoa(String.fromCharCode.apply(null, u8));
@@ -149,6 +150,7 @@ exports.startPayment = async (req, res) => {
     billAddrPostCode: billAddrPostCode,
     // billAddrState: "18",
   };
+
   const purchaseRequestEncoded = btoa(JSON.stringify(purchaseRequestJson));
   const formData = {
     transactionCode,
@@ -240,7 +242,7 @@ exports.Paymentresponse = async (req, res) => {
   const successMessageTypes = ["8", "10", "M", "P"];
   const body = req.body;
   console.log("Payment response received:", body);
-  const travelFusionApi=process.env.FLIGHT_API;
+  const travelFusionApi = process.env.FLIGHT_API;
   if (successMessageTypes.includes(body.messageType)) {
     const calculatedFingerprint = generateFingerprintForResponse(
       posAuthCode,
@@ -271,17 +273,23 @@ exports.Paymentresponse = async (req, res) => {
             Paymentstatus: Paymentstatus,
           }
         );
+        const updatedPayment = await Payment.findOne().sort({ _id: -1 });
         const bookingDetails = updatedPayment.TravelfusionBookingDetails;
-        await fetch(`${travelFusionApi}/start-booking`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(bookingDetails),
-        });
+        const startBookingResult = await fetch(
+          `${travelFusionApi}/start-booking`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(bookingDetails),
+          }
+        );
+        console.log("Intiating Booking Process!!");
         console.log("start-booking response", startBookingResult);
         const TFBookingReference = bookingDetails.TFBookingReference;
-        await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
+        await new Promise((resolve) => setTimeout(resolve, 10000));
+        console.log("Checking Booking status");
         const checkBookingResponse = await fetch(
           `${travelFusionApi}/check-booking`,
           {
@@ -301,10 +309,14 @@ exports.Paymentresponse = async (req, res) => {
         await Payment.findOneAndUpdate(
           { merchantSession: body.merchantRespMerchantSession },
           {
-            BookingStatus: checkBookingResult.additionalInfo.Status[0],
+            $set: {
+              "TravelfusionBookingDetails.BookingStatus":
+                checkBookingResult.additionalInfo.Status[0],
+            },
           }
         );
-        res.status(201).redirect("http://localhost:5173/booking/payment");
+
+        res.status(201).redirect(process.env.SUCCESS_URL);
       } catch (error) {
         console.error(error);
       }
@@ -319,7 +331,7 @@ exports.Paymentresponse = async (req, res) => {
             Paymentstatus: Paymentstatus,
           }
         );
-        res.status(422).redirect("http://localhost:5173/booking/payment");
+        res.status(422).redirect(process.env.UNSUCCESS_URL);
       } catch (error) {
         console.error(error + "f");
       }
