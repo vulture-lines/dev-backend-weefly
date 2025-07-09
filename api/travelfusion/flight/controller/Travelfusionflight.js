@@ -429,7 +429,7 @@ const processDetails = async (req, res) => {
     const groupList = router?.GroupList || [];
     const routeid = processResponse?.RoutingId?.[0] || null;
     const supportedCardlist =
-      processResponse?.SupportedCardList?.[0].SupportedCArd?.[0];
+      processResponse?.SupportedCardList?.[0].SupportedCard?.[0];
     const AlternativeFares=router?.AlternativeFares?.[0];
     const Features=router?.Features?.[0];
     res.status(200).json({
