@@ -111,7 +111,11 @@ const startRouting = async (req, res) => {
                   },
                   {
                     Name: "Enduserip",
-                    Value: req.ip || req.connection.remoteAddress || "unknown",
+                    Value: (
+                      req.ip ||
+                      req.connection.remoteAddress ||
+                      "unknown"
+                    ).replace(/^::ffff:/, ""),
                   },
                   {
                     Name: "EndUserBrowserAgent",
@@ -144,11 +148,7 @@ const startRouting = async (req, res) => {
               },
             })),
           },
-
-          IncrementalResults: incrementalResults,
-          // include TravelClass if provided
           ...(travelClass && { SupplierClass: travelClass }),
-
           BookingProfile: {
             CustomSupplierParameterList: {
               CustomSupplierParameter: [
@@ -163,6 +163,7 @@ const startRouting = async (req, res) => {
               ],
             },
           },
+          IncrementalResults: incrementalResults,
         },
       },
     };
@@ -177,7 +178,7 @@ const startRouting = async (req, res) => {
       },
       timeout: 120000,
     });
-    return res.status(200).send(routingXml)
+    return res.status(200).send(routingXml);
     const parsed = await parseStringPromise(response.data);
     const startRoutingResponse = parsed?.CommandList?.StartRouting?.[0];
     if (!startRoutingResponse?.RoutingId?.[0]) {
