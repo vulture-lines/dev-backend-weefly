@@ -177,7 +177,7 @@ const startRouting = async (req, res) => {
       },
       timeout: 120000,
     });
-    return response.status(200).send(routingXml)
+    return res.status(200).send(routingXml)
     const parsed = await parseStringPromise(response.data);
     const startRoutingResponse = parsed?.CommandList?.StartRouting?.[0];
     if (!startRoutingResponse?.RoutingId?.[0]) {
