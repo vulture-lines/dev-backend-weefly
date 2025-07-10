@@ -46,109 +46,6 @@ const getBranchSupplierList = async (req, res) => {
   }
 };
 
-/*const startRouting = async (req, res) => {
-  try {
-    const {
-      mode = "plane",
-      origin,
-      destination,
-      dateOfSearch,
-      returnDateOfSearch, // for return trips
-      // maxChanges = 1,
-      // maxHops = 2,
-      timeout = 40,
-      travellers = [],
-      incrementalResults = true,
-      travelClass,
-      preferredLanguage,
-    } = req.body;
-
-    if (!origin || !destination || !dateOfSearch || travellers.length === 0) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
-
-    // get loginId
-    const loginId = await fetchLoginID();
-
-    const builder = new Builder({ headless: true });
-
-    const startRoutingObj = {
-      CommandList: {
-        StartRouting: {
-          XmlLoginId: loginId,
-          LoginId: loginId,
-          Mode: mode,
-          Origin: {
-            Descriptor: origin.descriptor,
-            Type: "airportcode",
-            // Type: "airportgroup",
-          },
-          Destination: {
-            Descriptor: destination.descriptor,
-            Type: "airportcode",
-            Radius: 1000,
-          },
-          OutwardDates: {
-            DateOfSearch: dateOfSearch,
-          },
-          // if return date is provided
-          ...(returnDateOfSearch && {
-            ReturnDates: {
-              DateOfSearch: returnDateOfSearch,
-            },
-          }),
-          // MaxChanges: maxChanges,
-          // MaxHops: maxHops,
-          Timeout: timeout,
-          TravellerList: {
-            Traveller: travellers.map((age) => ({
-              Age: age,
-              ...(preferredLanguage && {
-                CustomSupplierParameterList: {
-                  CustomSupplierParameter: {
-                    Name: "PreferredLanguage",
-                    Value: preferredLanguage,
-                  },
-                },
-              }),
-            })),
-          },
-          IncrementalResults: incrementalResults,
-
-          // include TravelClass if provided
-          ...(travelClass && { SupplierClass: travelClass }),
-        },
-      },
-    };
-
-    const routingXml = builder.buildObject(startRoutingObj);
-
-    const response = await axios.post(travelFusionUrl, routingXml, {
-      headers: {
-        "Content-Type": "text/xml; charset=utf-8",
-        Accept: "text/xml",
-        "Accept-Encoding": "gzip, deflate",
-      },
-      timeout: 120000,
-    });
-    const parsed = await parseStringPromise(response.data);
-    const startRoutingResponse = parsed?.CommandList?.StartRouting?.[0];
-    if (!startRoutingResponse?.RoutingId?.[0]) {
-      return res.status(422).json({
-        error: "No RoutingId returned",
-        requestdata: response.data,
-      });
-    }
-    res.status(200).json({
-      routingId: startRoutingResponse.RoutingId[0],
-      // routerList: startRoutingResponse.RouterList || [],
-    });
-  } catch (err) {
-    console.error("StartRouting Error:", err.message);
-    res.status(500).json({ error: err.message });
-  }
-}; */
-
 const startRouting = async (req, res) => {
   try {
     const {
@@ -163,9 +60,8 @@ const startRouting = async (req, res) => {
       travellers = [],
       incrementalResults = true,
       travelClass,
-      preferredLanguage,
     } = req.body;
-
+    const preferredLanguage = "ES";
     if (!origin || !destination || !dateOfSearch || travellers.length === 0) {
       return res.status(400).json({ error: "Missing required fields" });
     }
@@ -203,22 +99,56 @@ const startRouting = async (req, res) => {
           // MaxChanges: maxChanges,
           // MaxHops: maxHops,
           Timeout: timeout,
+
           TravellerList: {
             Traveller: travellers.map((age) => ({
               Age: age,
-              ...(preferredLanguage && {
-                CustomSupplierParameterList: {
-                  CustomSupplierParameter: {
-                    Name: "PreferredLanguage",
-                    Value: preferredLanguage,
+              CustomSupplierParameterList: {
+                CustomSupplierParameter: [
+                  {
+                    Name: "EdusermacAddress",
+                    Value: req.headers["x-edusermacaddress"] || "not-mac",
                   },
-                },
-              }),
+                  {
+                    Name: "Enduserip",
+                    Value: req.ip || req.connection.remoteAddress || "unknown",
+                  },
+                  {
+                    Name: "EndUserBrowserAgent",
+                    Value: req.headers["user-agent"] || "unknown",
+                  },
+                  {
+                    Name: "Requestorigin",
+                    Value:
+                      req.headers["origin"] ||
+                      req.headers["referer"] ||
+                      "unknown",
+                  },
+                  {
+                    Name: "Userdata",
+                    Value: JSON.stringify(travellers) || "unknown",
+                  },
+                  {
+                    Name: "Pointofsale",
+                    Value: "weefly", // or make this dynamic
+                  },
+                  ...(preferredLanguage
+                    ? [
+                        {
+                          Name: "PreferredLanguage",
+                          Value: preferredLanguage,
+                        },
+                      ]
+                    : []),
+                ],
+              },
             })),
           },
+
           IncrementalResults: incrementalResults,
           // include TravelClass if provided
           ...(travelClass && { SupplierClass: travelClass }),
+
           BookingProfile: {
             CustomSupplierParameterList: {
               CustomSupplierParameter: [
@@ -247,6 +177,7 @@ const startRouting = async (req, res) => {
       },
       timeout: 120000,
     });
+    return response.status(200).send(routingXml)
     const parsed = await parseStringPromise(response.data);
     const startRoutingResponse = parsed?.CommandList?.StartRouting?.[0];
     if (!startRoutingResponse?.RoutingId?.[0]) {
@@ -264,50 +195,6 @@ const startRouting = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
-/* const checkRouting = async (req, res) => {
-  try {
-    const { routingId } = req.body;
-    if (!routingId)
-      return res.status(400).json({ error: "RoutingId is required" });
-
-    
-    const loginId = await fetchLoginID();
-
-    const checkRoutingXml = new Builder({ headless: true }).buildObject({
-      CommandList: {
-        CheckRouting: {
-          XmlLoginId: loginId,
-          LoginId: loginId,
-          RoutingId: routingId,
-        },
-      },
-    });
-
-    const response = await axios.post(travelFusionUrl, checkRoutingXml, {
-      headers: {
-        "Content-Type": "text/xml; charset=utf-8",
-        Accept: "text/xml",
-      },
-      timeout: 120000,
-    });
-
-    const parsed = await parseStringPromise(response.data);
-    const checkRoutingResponse = parsed?.CommandList?.CheckRouting?.[0];
-    const routeId = checkRoutingResponse?.RoutingId;
-    const flightList = checkRoutingResponse?.RouterList;
-    const hasIncomplete = (flightList || []).find(
-      (router) => router?.Router?.Complete?.[0]?.toLowerCase() === "false"
-    );
-    if(hasIncomplete){
-      checkRoutingXml
-    }
-    res.status(200).json({ routingId: routeId, flightList: flightList });
-  } catch (err) {
-    console.error("CheckRouting Error:", err.message);
-    res.status(500).json({ error: err.message });
-  }
-}; */
 
 const checkRouting = async (req, res) => {
   try {
@@ -430,152 +317,21 @@ const processDetails = async (req, res) => {
     const routeid = processResponse?.RoutingId?.[0] || null;
     const supportedCardlist =
       processResponse?.SupportedCardList?.[0].SupportedCard?.[0];
-    const AlternativeFares=router?.AlternativeFares?.[0];
-    const Features=router?.Features?.[0];
+    const AlternativeFares = router?.AlternativeFares?.[0];
+    const Features = router?.Features?.[0];
     res.status(200).json({
       routeid,
       requiredParameterList,
       groupList,
       supportedCardlist,
       AlternativeFares,
-      Features
+      Features,
     });
   } catch (err) {
     console.error("ProcessDetails Error:", err.message);
     res.status(500).json({ error: err.message });
   }
 };
-
-/*const processTerms = async (req, res) => {
-  try {
-    const {
-      mode = "plane",
-      routingId,
-      bookingProfile,
-      seatOptions = [],
-      luggageOptions = [],
-      outwardLuggageOptions = [],
-      returnLuggageOptions = [],
-      outwardId,
-      returnId = null,
-    } = req.body;
-
-    if (!routingId || !bookingProfile) {
-      return res.status(400).json({
-        error: "routingId and bookingProfile are required",
-      });
-    }
-
-    const loginId = await fetchLoginID();
-
-    // deep copy bookingProfile to modify
-    let bookingProfileObj = JSON.parse(JSON.stringify(bookingProfile));
-
-    // assign seatOptions per passenger
-    if (seatOptions.length && bookingProfileObj.TravellerList?.Traveller) {
-      let travellers = bookingProfileObj.TravellerList.Traveller;
-
-      // if only one passenger, wrap in array
-      if (!Array.isArray(travellers)) {
-        travellers = [travellers];
-      }
-
-      travellers = travellers.map((traveller, index) => {
-        const seat = seatOptions[index] || "";
-        const outwardLuggage = outwardLuggageOptions[index] || "";
-        const returnLuggage = returnLuggageOptions[index] || "";
-        const luggage = luggageOptions[index] || "";
-
-        // get existing CSPs
-        let csps =
-          traveller.CustomSupplierParameterList?.CustomSupplierParameter || [];
-
-        // normalize to array
-        if (!Array.isArray(csps)) {
-          csps = [csps];
-        }
-
-        // add seat if available
-        if (seat) {
-          csps.push({
-            Name: "SeatOptions",
-            Value: `${seat};`,
-          });
-        }
-        if (luggage) {
-          csps.push({
-            Name: "LuggageOptions",
-            Value: `${luggage}`,
-          });
-        } else {
-          if (outwardLuggage) {
-            csps.push({
-              Name: "OutwardLuggageOptions",
-              Value: `${outwardLuggage}`,
-            });
-          }
-
-          if (returnLuggage) {
-            csps.push({
-              Name: "ReturnLuggageOptions",
-              Value: `${returnLuggage}`,
-            });
-          }
-        }
-
-        return {
-          ...traveller,
-          CustomSupplierParameterList: {
-            CustomSupplierParameter: csps,
-          },
-        };
-      });
-
-      bookingProfileObj.TravellerList.Traveller = travellers;
-    }
-
-    const processTermsObj = {
-      XmlLoginId: loginId,
-      LoginId: loginId,
-      Mode: mode,
-      RoutingId: routingId,
-      OutwardId: outwardId,
-      // insert ReturnId right here if present
-      ...(returnId ? { ReturnId: returnId } : {}),
-      BookingProfile: bookingProfileObj,
-    };
-
-    const requestObj = {
-      CommandList: {
-        ProcessTerms: processTermsObj,
-      },
-    };
-
-    // convert to XML
-    const builder = new Builder({ headless: true });
-    const xml = builder.buildObject(requestObj);
-    // send to TravelFusion
-    const response = await axios.post(travelFusionUrl, xml, {
-      headers: {
-        "Content-Type": "text/xml; charset=utf-8",
-        Accept: "text/xml",
-      },
-      timeout: 120000,
-    });
-    // parse XML response
-    const parsed = await parseStringPromise(response.data);
-    const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
-    if (termsResponse && Object.keys(termsResponse).length > 0) {
-      res.status(200).json({ data: termsResponse });
-    } else {
-      // fallback: send raw XML
-      res.status(200).send(response.data);
-    }
-  } catch (err) {
-    console.error("ProcessTerms Error:", err.message);
-    res.status(500).json({ error: err.message });
-  }
-}; */
 
 const processTerms = async (req, res) => {
   try {
