@@ -312,7 +312,6 @@ const processDetails = async (req, res) => {
 
     // return res.status(200).json({ processResponse });
     const router = processResponse?.Router?.[0];
-    return res.status(200).send(response.data)
     const requiredParameterList = router?.RequiredParameterList || [];
     const groupList = router?.GroupList || [];
     const routeid = processResponse?.RoutingId?.[0] || null;
@@ -466,7 +465,7 @@ const processTerms = async (req, res) => {
     // Parse XML response
     const parsed = await parseStringPromise(response.data);
     const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
-
+    return res.status(200).send(xml)
     if (termsResponse && Object.keys(termsResponse).length > 0) {
       res.status(200).json({ data: termsResponse });
     } else {
