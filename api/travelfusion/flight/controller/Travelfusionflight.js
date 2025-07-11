@@ -79,8 +79,8 @@ const startRouting = async (req, res) => {
           Mode: mode,
           Origin: {
             Descriptor: origin.descriptor,
-            Type: "airportcode",
-            // Type: "airportgroup",
+            // Type: "airportcode",
+            Type: "airportgroup",
           },
           Destination: {
             Descriptor: destination.descriptor,
@@ -103,49 +103,6 @@ const startRouting = async (req, res) => {
           TravellerList: {
             Traveller: travellers.map((age) => ({
               Age: age,
-              CustomSupplierParameterList: {
-                CustomSupplierParameter: [
-                  {
-                    Name: "EdusermacAddress",
-                    Value: req.headers["x-edusermacaddress"] || "not-mac",
-                  },
-                  {
-                    Name: "Enduserip",
-                    Value: (
-                      req.ip ||
-                      req.connection.remoteAddress ||
-                      "unknown"
-                    ).replace(/^::ffff:/, ""),
-                  },
-                  {
-                    Name: "EndUserBrowserAgent",
-                    Value: req.headers["user-agent"] || "unknown",
-                  },
-                  {
-                    Name: "Requestorigin",
-                    Value:
-                      req.headers["origin"] ||
-                      req.headers["referer"] ||
-                      "unknown",
-                  },
-                  {
-                    Name: "Userdata",
-                    Value: JSON.stringify(travellers) || "unknown",
-                  },
-                  {
-                    Name: "Pointofsale",
-                    Value: "weefly", // or make this dynamic
-                  },
-                  ...(preferredLanguage
-                    ? [
-                        {
-                          Name: "PreferredLanguage",
-                          Value: preferredLanguage,
-                        },
-                      ]
-                    : []),
-                ],
-              },
             })),
           },
           ...(travelClass && { SupplierClass: travelClass }),
@@ -163,6 +120,47 @@ const startRouting = async (req, res) => {
               ],
             },
           },
+          CustomSupplierParameterList: {
+            CustomSupplierParameter: [
+              {
+                Name: "EdusermacAddress",
+                Value: req.headers["x-edusermacaddress"] || "not-mac",
+              },
+              {
+                Name: "Enduserip",
+                Value: (
+                  req.ip ||
+                  req.connection.remoteAddress ||
+                  "unknown"
+                ).replace(/^::ffff:/, ""),
+              },
+              {
+                Name: "EndUserBrowserAgent",
+                Value: req.headers["user-agent"] || "unknown",
+              },
+              {
+                Name: "Requestorigin",
+                Value:
+                  req.headers["origin"] || req.headers["referer"] || "unknown",
+              },
+              {
+                Name: "Userdata",
+                Value: JSON.stringify(travellers) || "unknown",
+              },
+              {
+                Name: "Pointofsale",
+                Value: "weefly", // or make this dynamic
+              },
+              ...(preferredLanguage
+                ? [
+                    {
+                      Name: "PreferredLanguage",
+                      Value: preferredLanguage,
+                    },
+                  ]
+                : []),
+            ],
+          },
           IncrementalResults: incrementalResults,
         },
       },
@@ -178,7 +176,7 @@ const startRouting = async (req, res) => {
       },
       timeout: 120000,
     });
-    // return res.status(200).send(routingXml);
+    return res.status(200).send(routingXml);
     const parsed = await parseStringPromise(response.data);
     const startRoutingResponse = parsed?.CommandList?.StartRouting?.[0];
     if (!startRoutingResponse?.RoutingId?.[0]) {
