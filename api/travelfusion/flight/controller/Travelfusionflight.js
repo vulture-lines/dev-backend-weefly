@@ -239,7 +239,6 @@ const checkRouting = async (req, res) => {
         (router) => router?.Router?.Complete?.[0]?.toLowerCase() === "false"
       );
     }
-    return res.status(200).send(xmlresponse)
     res.status(200).json({ routingId: routeId, flightList: flightList });
   } catch (err) {
     console.error("CheckRouting Error:", err.message);
@@ -313,7 +312,7 @@ const processDetails = async (req, res) => {
 
     // return res.status(200).json({ processResponse });
     const router = processResponse?.Router?.[0];
-
+    return res.status(200).send(xml)
     const requiredParameterList = router?.RequiredParameterList || [];
     const groupList = router?.GroupList || [];
     const routeid = processResponse?.RoutingId?.[0] || null;
