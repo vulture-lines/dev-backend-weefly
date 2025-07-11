@@ -312,7 +312,7 @@ const processDetails = async (req, res) => {
 
     // return res.status(200).json({ processResponse });
     const router = processResponse?.Router?.[0];
-    return res.status(200).send(xml)
+    return res.status(200).send(response.data)
     const requiredParameterList = router?.RequiredParameterList || [];
     const groupList = router?.GroupList || [];
     const routeid = processResponse?.RoutingId?.[0] || null;
