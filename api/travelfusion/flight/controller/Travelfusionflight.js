@@ -184,7 +184,6 @@ const startRouting = async (req, res) => {
         requestdata: response.data,
       });
     }
-    return res.status(200).send(response.data);
     res.status(200).json({
       routingId: startRoutingResponse.RoutingId[0],
       // routerList: startRoutingResponse.RouterList || [],
@@ -206,10 +205,11 @@ const checkRouting = async (req, res) => {
     let routeId = "";
     let hasIncomplete = true;
     let parsed;
+    let checkRoutingXml;
     while (hasIncomplete) {
       const loginId = await fetchLoginID(); // start of the rerun part
 
-      const checkRoutingXml = new Builder({ headless: true }).buildObject({
+      checkRoutingXml = new Builder({ headless: true }).buildObject({
         CommandList: {
           CheckRouting: {
             XmlLoginId: loginId,
@@ -237,6 +237,7 @@ const checkRouting = async (req, res) => {
         (router) => router?.Router?.Complete?.[0]?.toLowerCase() === "false"
       );
     }
+    return res.status(200).send(checkRoutingXml)
     res.status(200).json({ routingId: routeId, flightList: flightList });
   } catch (err) {
     console.error("CheckRouting Error:", err.message);
