@@ -141,7 +141,7 @@ const startRouting = async (req, res) => {
               {
                 Name: "Requestorigin",
                 Value:
-                  req.headers["origin"] || req.headers["referer"] || "unknown",
+                  req.headers["origin"] || req.headers["referer"] || "postman",
               },
               {
                 Name: "Userdata",
@@ -176,7 +176,6 @@ const startRouting = async (req, res) => {
       },
       timeout: 120000,
     });
-    return res.status(200).send(routingXml);
     const parsed = await parseStringPromise(response.data);
     const startRoutingResponse = parsed?.CommandList?.StartRouting?.[0];
     if (!startRoutingResponse?.RoutingId?.[0]) {
@@ -185,6 +184,7 @@ const startRouting = async (req, res) => {
         requestdata: response.data,
       });
     }
+    return res.status(200).send(response.data);
     res.status(200).json({
       routingId: startRoutingResponse.RoutingId[0],
       // routerList: startRoutingResponse.RouterList || [],
