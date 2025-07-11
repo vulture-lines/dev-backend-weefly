@@ -544,6 +544,10 @@ const startBooking = async (req, res) => {
 
     const xml = builder.buildObject(startBookingObj);
 
+    if (xmllog === "yes" && xmlreq === "yes") {
+      return res.status(200).send(xml);
+    }
+
     const response = await axios.post(travelFusionUrl, xml, {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
@@ -552,10 +556,7 @@ const startBooking = async (req, res) => {
       },
       timeout: 120000,
     });
-
-    if (xmllog === "yes" && xmlreq === "yes") {
-      return res.status(200).send(xml);
-    } else if (xmllog == "yes") {
+    if (xmllog == "yes") {
       return res.status(200).send(response.data);
     }
 
@@ -625,7 +626,7 @@ const checkBooking = async (req, res) => {
 
 const getBookingDetails = async (req, res) => {
   try {
-    const { TFBookingReference ,xmllog,xmlreq } = req.body;
+    const { TFBookingReference, xmllog, xmlreq } = req.body;
     const loginId = await fetchLoginID();
 
     const builder = new Builder({ headless: true });
