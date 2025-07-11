@@ -60,6 +60,8 @@ const startRouting = async (req, res) => {
       travellers = [],
       incrementalResults = true,
       travelClass,
+      xmllog,
+      xmlreq,
     } = req.body;
     const preferredLanguage = "ES";
     if (!origin || !destination || !dateOfSearch || travellers.length === 0) {
@@ -176,6 +178,13 @@ const startRouting = async (req, res) => {
       },
       timeout: 120000,
     });
+
+    if (xmllog === "yes" && xmlreq === "yes") {
+      return res.status(200).send(routingXml);
+    } else if (xmllog == "yes") {
+      return res.status(200).send(response.data);
+    }
+
     const parsed = await parseStringPromise(response.data);
     const startRoutingResponse = parsed?.CommandList?.StartRouting?.[0];
     if (!startRoutingResponse?.RoutingId?.[0]) {
@@ -196,7 +205,7 @@ const startRouting = async (req, res) => {
 
 const checkRouting = async (req, res) => {
   try {
-    const { routingId } = req.body;
+    const { routingId, xmllog, xmlreq } = req.body;
     if (!routingId) {
       return res.status(400).json({ error: "RoutingId is required" });
     }
@@ -206,7 +215,7 @@ const checkRouting = async (req, res) => {
     let hasIncomplete = true;
     let parsed;
     let checkRoutingXml;
-    let  xmlresponse;
+    let xmlresponse;
     while (hasIncomplete) {
       const loginId = await fetchLoginID(); // start of the rerun part
 
@@ -228,7 +237,7 @@ const checkRouting = async (req, res) => {
         },
         timeout: 120000,
       });
-      xmlresponse=response.data
+      xmlresponse = response.data;
 
       parsed = await parseStringPromise(response.data);
       const checkRoutingResponse = parsed?.CommandList?.CheckRouting?.[0];
@@ -239,6 +248,13 @@ const checkRouting = async (req, res) => {
         (router) => router?.Router?.Complete?.[0]?.toLowerCase() === "false"
       );
     }
+
+    if (xmllog === "yes" && xmlreq === "yes") {
+      return res.status(200).send(checkRoutingXml);
+    } else if (xmllog == "yes") {
+      return res.status(200).send(xmlresponse);
+    }
+
     res.status(200).json({ routingId: routeId, flightList: flightList });
   } catch (err) {
     console.error("CheckRouting Error:", err.message);
@@ -248,7 +264,7 @@ const checkRouting = async (req, res) => {
 
 const processDetails = async (req, res) => {
   try {
-    const { routingId, outwardId, returnId = null } = req.body;
+    const { routingId, outwardId, returnId = null, xmllog, xmlreq } = req.body;
 
     if (!routingId || !outwardId) {
       return res
@@ -300,6 +316,13 @@ const processDetails = async (req, res) => {
       },
       timeout: 120000,
     });
+
+    if (xmllog === "yes" && xmlreq === "yes") {
+      return res.status(200).send(xml);
+    } else if (xmllog == "yes") {
+      return res.status(200).send(response.data);
+    }
+
     const parsed = await parseStringPromise(response.data);
     const processResponse = parsed?.CommandList?.ProcessDetails?.[0];
     // if (processResponse) {
@@ -345,7 +368,9 @@ const processTerms = async (req, res) => {
       returnLuggageOptions = [],
       outwardId,
       returnId = null,
-      countryOfUser, // <-- ISO 3166-1 alpha-2 country code, e.g., "GB"
+      countryOfUser,
+      xmlreq,
+      xmllog,
     } = req.body;
 
     if (!routingId || !bookingProfile) {
@@ -461,11 +486,15 @@ const processTerms = async (req, res) => {
       },
       timeout: 120000,
     });
-    // return res.send(xml)
-    // Parse XML response
+
+    if (xmllog === "yes" && xmlreq === "yes") {
+      return res.status(200).send(xml);
+    } else if (xmllog == "yes") {
+      return res.status(200).send(response.data);
+    }
     const parsed = await parseStringPromise(response.data);
     const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
-    return res.status(200).send(xml)
+
     if (termsResponse && Object.keys(termsResponse).length > 0) {
       res.status(200).json({ data: termsResponse });
     } else {
@@ -484,6 +513,8 @@ const startBooking = async (req, res) => {
       expectedCurrency,
       TFBookingReference,
       fakeBooking = true,
+      xmlreq,
+      xmllog,
     } = req.body;
 
     const loginId = await fetchLoginID();
@@ -522,6 +553,12 @@ const startBooking = async (req, res) => {
       timeout: 120000,
     });
 
+    if (xmllog === "yes" && xmlreq === "yes") {
+      return res.status(200).send(xml);
+    } else if (xmllog == "yes") {
+      return res.status(200).send(response.data);
+    }
+
     const parsed = await parseStringPromise(response.data);
     const result = parsed?.CommandList?.StartBooking?.[0];
     if (result) {
@@ -540,7 +577,7 @@ const startBooking = async (req, res) => {
 
 const checkBooking = async (req, res) => {
   try {
-    const { TFBookingReference } = req.body;
+    const { TFBookingReference, xmllog, xmlreq } = req.body;
     const loginId = await fetchLoginID();
 
     const builder = new Builder({ headless: true });
@@ -566,6 +603,12 @@ const checkBooking = async (req, res) => {
       timeout: 120000,
     });
 
+    if (xmllog === "yes" && xmlreq === "yes") {
+      return res.status(200).send(xml);
+    } else if (xmllog == "yes") {
+      return res.status(200).send(response.data);
+    }
+
     const parsed = await parseStringPromise(response.data);
     const result = parsed?.CommandList?.CheckBooking?.[0];
 
@@ -582,7 +625,7 @@ const checkBooking = async (req, res) => {
 
 const getBookingDetails = async (req, res) => {
   try {
-    const { TFBookingReference } = req.body;
+    const { TFBookingReference ,xmllog,xmlreq } = req.body;
     const loginId = await fetchLoginID();
 
     const builder = new Builder({ headless: true });
@@ -608,6 +651,11 @@ const getBookingDetails = async (req, res) => {
       timeout: 120000,
     });
 
+    if (xmllog === "yes" && xmlreq === "yes") {
+      return res.status(200).send(xml);
+    } else if (xmllog == "yes") {
+      return res.status(200).send(response.data);
+    }
     const parsed = await parseStringPromise(response.data);
 
     const result = parsed?.CommandList?.CheckBooking?.[0];
