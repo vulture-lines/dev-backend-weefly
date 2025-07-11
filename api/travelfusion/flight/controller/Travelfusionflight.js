@@ -206,6 +206,7 @@ const checkRouting = async (req, res) => {
     let hasIncomplete = true;
     let parsed;
     let checkRoutingXml;
+    let  xmlresponse;
     while (hasIncomplete) {
       const loginId = await fetchLoginID(); // start of the rerun part
 
@@ -227,6 +228,7 @@ const checkRouting = async (req, res) => {
         },
         timeout: 120000,
       });
+      xmlresponse=response.data
 
       parsed = await parseStringPromise(response.data);
       const checkRoutingResponse = parsed?.CommandList?.CheckRouting?.[0];
@@ -237,7 +239,7 @@ const checkRouting = async (req, res) => {
         (router) => router?.Router?.Complete?.[0]?.toLowerCase() === "false"
       );
     }
-    return res.status(200).send(parsed)
+    return res.status(200).send(xmlresponse)
     res.status(200).json({ routingId: routeId, flightList: flightList });
   } catch (err) {
     console.error("CheckRouting Error:", err.message);
