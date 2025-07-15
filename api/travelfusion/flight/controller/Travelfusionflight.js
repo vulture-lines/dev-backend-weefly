@@ -81,12 +81,12 @@ const startRouting = async (req, res) => {
           Mode: mode,
           Origin: {
             Descriptor: origin.descriptor,
-            Type: "airportcode",
+            // Type: "airportcode",
+            Type: "airportgroup",
           },
           Destination: {
             Descriptor: destination.descriptor,
             Type: "airportcode",
-            // Type: "airportgroup",
             Radius: 1000,
           },
           OutwardDates: {
@@ -279,7 +279,7 @@ const processDetails = async (req, res) => {
           LoginId: loginId,
           RoutingId: routingId,
           OutwardId: outwardId,
-          ...(returnId && { ReturnId: returnId }), 
+          ...(returnId && { ReturnId: returnId }),
           HandoffParametersOnly: false,
           BookingProfile: {
             CustomSupplierParameterList: {
