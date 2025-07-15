@@ -47,10 +47,7 @@ const getBranchSupplierList = async (req, res) => {
 };
 
 const startRouting = async (req, res) => {
-  let response;
-  let  routingXml;
-  let startRoutingObj;
-  // try {
+  try {
     const {
       mode = "plane",
       origin,
@@ -76,7 +73,7 @@ const startRouting = async (req, res) => {
 
     const builder = new Builder({ headless: true });
 
-    startRoutingObj = {
+    const startRoutingObj = {
       CommandList: {
         StartRouting: {
           XmlLoginId: loginId,
@@ -169,18 +166,9 @@ const startRouting = async (req, res) => {
       },
     };
 
- 
+    const routingXml = builder.buildObject(startRoutingObj);
 
-  try {
-  routingXml = builder.buildObject(startRoutingObj);
-  console.log("Generated XML:", routingXml);
-} catch (xmlErr) {
-
-  console.error("XML Build Error:", xmlErr);
-  return res.status(500).json({ error: "Invalid routing request format." , message:req.body});
-}
-
-  response = await axios.post(travelFusionUrl, routingXml, {
+    const response = await axios.post(travelFusionUrl, routingXml, {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
@@ -188,7 +176,6 @@ const startRouting = async (req, res) => {
       },
       timeout: 120000,
     });
-
 
     if (xmllog === "yes" && xmlreq === "yes") {
       return res.status(200).send(routingXml);
@@ -208,19 +195,12 @@ const startRouting = async (req, res) => {
       routingId: startRoutingResponse.RoutingId[0],
       // routerList: startRoutingResponse.RouterList || [],
     });
-//   } catch (err) {
-//   console.error("StartRouting Error:", err?.response?.status || err.message);
-//     console.log("rx" , routingXml);
-//      console.log("ro", startRoutingObj);
-//      console.log("rq",req.body);
-//  console.log("res", response.data);
-
-//   const statusCode = err?.response?.status || 500;
-//   const errorMessage =
-//     err?.response?.data || err.message || "Unknown server error";
-// console.log(travelFusionUrl);
-//   res.status(statusCode).json({ error: errorMessage });
-//   }
+  } catch (err) {
+    console.error("StartRouting Error:", err);
+    let login =await fetchLoginID();
+    console.log(login)
+    res.status(500).json({ error: err.message });
+  }
 };
 
 const checkRouting = async (req, res) => {
@@ -931,7 +911,8 @@ const getAirports = async (req, res) => {
     res.status(200).json({
       Airportdata: simplifiedAirports,
     });
-  } catch (error) {
+  } catch (error) {4
+    console.log(error)
     console.error("Getting Airport Code Error", error.message);
     res.status(500).json({ error: error.message });
   }
