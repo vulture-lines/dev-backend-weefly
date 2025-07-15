@@ -202,8 +202,9 @@ const startRouting = async (req, res) => {
   } catch (err) {
   console.error("StartRouting Error:", err?.response?.status || err.message);
     console.log("rx" , routingXml);
+     console.log("ro", startRoutingObj);
  console.log("res", response.data);
- console.log("ro", startRoutingObj);
+
   const statusCode = err?.response?.status || 500;
   const errorMessage =
     err?.response?.data || err.message || "Unknown server error";
