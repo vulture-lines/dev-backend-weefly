@@ -196,8 +196,13 @@ const startRouting = async (req, res) => {
       // routerList: startRoutingResponse.RouterList || [],
     });
   } catch (err) {
-    console.error("StartRouting Error:", err.message);
-    res.status(500).json({ error: err.message });
+  console.error("StartRouting Error:", err?.response?.status || err.message);
+
+  const statusCode = err?.response?.status || 500;
+  const errorMessage =
+    err?.response?.data || err.message || "Unknown server error";
+console.log(travelFusionUrl);
+  res.status(statusCode).json({ error: errorMessage });
   }
 };
 
@@ -911,7 +916,7 @@ const getAirports = async (req, res) => {
     });
   } catch (error) {
     console.error("Getting Airport Code Error", error.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
