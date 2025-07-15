@@ -47,6 +47,8 @@ const getBranchSupplierList = async (req, res) => {
 };
 
 const startRouting = async (req, res) => {
+  let response;
+  let  routingXml;
   try {
     const {
       mode = "plane",
@@ -166,9 +168,9 @@ const startRouting = async (req, res) => {
       },
     };
 
-    const routingXml = builder.buildObject(startRoutingObj);
+  routingXml = builder.buildObject(startRoutingObj);
 
-    const response = await axios.post(travelFusionUrl, routingXml, {
+  response = await axios.post(travelFusionUrl, routingXml, {
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
         Accept: "text/xml",
@@ -177,8 +179,7 @@ const startRouting = async (req, res) => {
       timeout: 120000,
     });
 
-    console.log("rx" , routingXml);
- console.log("res", response.data);
+
     if (xmllog === "yes" && xmlreq === "yes") {
       return res.status(200).send(routingXml);
     } else if (xmllog == "yes") {
@@ -199,7 +200,8 @@ const startRouting = async (req, res) => {
     });
   } catch (err) {
   console.error("StartRouting Error:", err?.response?.status || err.message);
-
+    console.log("rx" , routingXml);
+ console.log("res", response.data);
   const statusCode = err?.response?.status || 500;
   const errorMessage =
     err?.response?.data || err.message || "Unknown server error";
