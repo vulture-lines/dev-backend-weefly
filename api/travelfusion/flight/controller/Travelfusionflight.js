@@ -285,10 +285,10 @@ const processDetails = async (req, res) => {
           BookingProfile: {
             CustomSupplierParameterList: {
               CustomSupplierParameter: [
-                {
-                  Name: "IncludeStructuredFeatures",
-                  Value: "y",
-                },
+                // {
+                //   Name: "IncludeStructuredFeatures",
+                //   Value: "y",
+                // },
                 {
                   Name: "IncludeAlternativeFares",
                   Value: "y",
