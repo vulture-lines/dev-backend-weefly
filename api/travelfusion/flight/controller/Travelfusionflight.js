@@ -50,7 +50,7 @@ const startRouting = async (req, res) => {
   let response;
   let  routingXml;
   let startRoutingObj;
-  try {
+  // try {
     const {
       mode = "plane",
       origin,
@@ -208,19 +208,19 @@ const startRouting = async (req, res) => {
       routingId: startRoutingResponse.RoutingId[0],
       // routerList: startRoutingResponse.RouterList || [],
     });
-  } catch (err) {
-  console.error("StartRouting Error:", err?.response?.status || err.message);
-    console.log("rx" , routingXml);
-     console.log("ro", startRoutingObj);
-     console.log("rq",req.body);
- console.log("res", response.data);
+//   } catch (err) {
+//   console.error("StartRouting Error:", err?.response?.status || err.message);
+//     console.log("rx" , routingXml);
+//      console.log("ro", startRoutingObj);
+//      console.log("rq",req.body);
+//  console.log("res", response.data);
 
-  const statusCode = err?.response?.status || 500;
-  const errorMessage =
-    err?.response?.data || err.message || "Unknown server error";
-console.log(travelFusionUrl);
-  res.status(statusCode).json({ error: errorMessage });
-  }
+//   const statusCode = err?.response?.status || 500;
+//   const errorMessage =
+//     err?.response?.data || err.message || "Unknown server error";
+// console.log(travelFusionUrl);
+//   res.status(statusCode).json({ error: errorMessage });
+//   }
 };
 
 const checkRouting = async (req, res) => {
