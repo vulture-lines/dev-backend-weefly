@@ -169,7 +169,16 @@ const startRouting = async (req, res) => {
       },
     };
 
+ 
+
+  try {
   routingXml = builder.buildObject(startRoutingObj);
+  console.log("Generated XML:", routingXml);
+} catch (xmlErr) {
+  console.log(req.body)
+  console.error("XML Build Error:", xmlErr);
+  return res.status(500).json({ error: "Invalid routing request format." , message:req.body});
+}
 
   response = await axios.post(travelFusionUrl, routingXml, {
       headers: {
