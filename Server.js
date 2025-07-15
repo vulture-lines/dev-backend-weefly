@@ -10,6 +10,7 @@ const sisproutes=require("./routes/SISPRoutes.js");
 const commissionRoutes=require("./routes/Commisionroutes.js");
 const travelFusionRoute=require("./api/travelfusion/flight/routes/Travelfusionflightapi.js")
 const travelFusionHotelRoute=require("./api/travelfusion/hotel/routes/Travelfusionapi.js")
+const caboVerdeApiRoute=require("./api/caboverde/flight/routes/Caboverdeapi.js")
 const connectDb = require("./config/Db.js");
 dotenv.config();
 const app = express();
@@ -31,6 +32,7 @@ app.use("/api", flightsRoute);
 app.use("/api", userRoute);
 app.use("/api", otpRoute);
 app.use("/flightapi", travelFusionRoute);
+app.use("/flightapi",caboVerdeApiRoute );
 app.use("/hotelapi", travelFusionHotelRoute);
 app.use("/transactionapi",sisproutes);
 app.use("/transactionapi",commissionRoutes);

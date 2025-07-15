@@ -107,6 +107,7 @@ const startRouting = async (req, res) => {
               Age: age,
             })),
           },
+          IncrementalResults: incrementalResults,
           ...(travelClass && { SupplierClass: travelClass }),
           BookingProfile: {
             CustomSupplierParameterList: {
@@ -115,55 +116,52 @@ const startRouting = async (req, res) => {
                   Name: "IncludeStructuredFeatures",
                   Value: "y",
                 },
+                // {
+                //   Name: "IncludeAlternativeFares",
+                //   Value: "y",
+                // },
                 {
-                  Name: "IncludeAlternativeFares",
-                  Value: "y",
+                  Name: "EndUserDeviceMACAddress",
+                  Value: req.headers["x-edusermacaddress"] || "not-mac",
                 },
+                {
+                  Name: "EndUserIPAddress",
+                  Value: (
+                    req.ip ||
+                    req.connection.remoteAddress ||
+                    "unknown"
+                  ).replace(/^::ffff:/, ""),
+                },
+                {
+                  Name: "EndUserBrowserAgent",
+                  Value: req.headers["user-agent"] || "unknown",
+                },
+                {
+                  Name: "Requestorigin",
+                  Value:
+                    req.headers["origin"] ||
+                    req.headers["referer"] ||
+                    "postman",
+                },
+                {
+                  Name: "Userdata",
+                  Value: JSON.stringify(travellers) || "unknown",
+                },
+                {
+                  Name: "Pointofsale",
+                  Value: "CV",
+                },
+                ...(preferredLanguage
+                  ? [
+                      {
+                        Name: "PreferredLanguage",
+                        Value: preferredLanguage,
+                      },
+                    ]
+                  : []),
               ],
             },
           },
-          CustomSupplierParameterList: {
-            CustomSupplierParameter: [
-              {
-                Name: "EdusermacAddress",
-                Value: req.headers["x-edusermacaddress"] || "not-mac",
-              },
-              {
-                Name: "Enduserip",
-                Value: (
-                  req.ip ||
-                  req.connection.remoteAddress ||
-                  "unknown"
-                ).replace(/^::ffff:/, ""),
-              },
-              {
-                Name: "EndUserBrowserAgent",
-                Value: req.headers["user-agent"] || "unknown",
-              },
-              {
-                Name: "Requestorigin",
-                Value:
-                  req.headers["origin"] || req.headers["referer"] || "postman",
-              },
-              {
-                Name: "Userdata",
-                Value: JSON.stringify(travellers) || "unknown",
-              },
-              {
-                Name: "Pointofsale",
-                Value: "weefly", // or make this dynamic
-              },
-              ...(preferredLanguage
-                ? [
-                    {
-                      Name: "PreferredLanguage",
-                      Value: preferredLanguage,
-                    },
-                  ]
-                : []),
-            ],
-          },
-          IncrementalResults: incrementalResults,
         },
       },
     };
@@ -281,6 +279,7 @@ const processDetails = async (req, res) => {
           LoginId: loginId,
           RoutingId: routingId,
           OutwardId: outwardId,
+          ...(returnId && { ReturnId: returnId }), 
           HandoffParametersOnly: false,
           BookingProfile: {
             CustomSupplierParameterList: {
@@ -299,11 +298,6 @@ const processDetails = async (req, res) => {
         },
       },
     };
-
-    // Add ReturnId if provided
-    if (returnId) {
-      requestObj.CommandList.ProcessDetails.ReturnId = returnId;
-    }
 
     const builder = new Builder({ headless: true });
     const xml = builder.buildObject(requestObj);
