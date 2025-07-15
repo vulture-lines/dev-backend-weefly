@@ -80,13 +80,15 @@ const startRouting = async (req, res) => {
           Mode: mode,
           Origin: {
             Descriptor: origin.descriptor,
-            // Type: "airportcode",
-            Type: "airportgroup",
+            Type: "airportcode",
+            Radius: 1000,
+            // Type: "airportgroup",
           },
           Destination: {
             Descriptor: destination.descriptor,
-            Type: "airportcode",
-            Radius: 1000,
+            // Type: "airportcode",
+            // Radius: 1000,
+            Type: "airportgroup",
           },
           OutwardDates: {
             DateOfSearch: dateOfSearch,
@@ -186,7 +188,7 @@ const startRouting = async (req, res) => {
         requestdata: response.data,
       });
     }
-       
+
     res.status(200).json({
       routingId: startRoutingResponse.RoutingId[0],
       // routerList: startRoutingResponse.RouterList || [],
@@ -281,7 +283,6 @@ const processDetails = async (req, res) => {
           BookingProfile: {
             CustomSupplierParameterList: {
               CustomSupplierParameter: [
-
                 {
                   Name: "IncludeAlternativeFares",
                   Value: "y",
@@ -903,8 +904,9 @@ const getAirports = async (req, res) => {
     res.status(200).json({
       Airportdata: simplifiedAirports,
     });
-  } catch (error) {4
-    console.log(error)
+  } catch (error) {
+    4;
+    console.log(error);
     console.error("Getting Airport Code Error", error.message);
     res.status(500).json({ error: error.message });
   }
