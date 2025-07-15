@@ -175,7 +175,7 @@ const startRouting = async (req, res) => {
   routingXml = builder.buildObject(startRoutingObj);
   console.log("Generated XML:", routingXml);
 } catch (xmlErr) {
-  console.log(req.body)
+
   console.error("XML Build Error:", xmlErr);
   return res.status(500).json({ error: "Invalid routing request format." , message:req.body});
 }
@@ -212,6 +212,7 @@ const startRouting = async (req, res) => {
   console.error("StartRouting Error:", err?.response?.status || err.message);
     console.log("rx" , routingXml);
      console.log("ro", startRoutingObj);
+     console.log("rq",req.body);
  console.log("res", response.data);
 
   const statusCode = err?.response?.status || 500;
