@@ -4,8 +4,8 @@ const { Builder } = require("xml2js");
 const { parseStringPromise } = require("xml2js");
 
 const getAvailability = async (req, res) => {
-  const username = process.env.API_USERNAME;
-  const password = process.env.API_PASSWORD;
+  const username = process.env.API_USERNAME_CABOVERDE;
+  const password = process.env.API_PASSWORD_CABOVERDE;
 
   const builder = new Builder({ headless: true });
 

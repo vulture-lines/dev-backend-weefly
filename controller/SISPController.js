@@ -19,7 +19,6 @@ const threeDSServerUrl = process.env.THREEDS_SERVER_URL;
 const vinti4CvUrl = process.env.VINTI_FOUR_CV_URL;
 const paymentresponseurl = process.env.PAYMENT_RESPONSE_URL;
 
-console.log(posID);
 // Helper functions
 function toBase64(u8) {
   return btoa(String.fromCharCode.apply(null, u8));
