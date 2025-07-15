@@ -17,12 +17,7 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-// app.use(
-//   cors({
-//     origin: ["http://localhost:5173", "https://weefly-frontend.vercel.app","http://localhost:3000","http://localhost:5000"],
-//     credentials: true,
-//   })
-// );
+
 
 app.use(cors());
 

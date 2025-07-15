@@ -49,6 +49,7 @@ const getBranchSupplierList = async (req, res) => {
 const startRouting = async (req, res) => {
   let response;
   let  routingXml;
+  let startRoutingObj;
   try {
     const {
       mode = "plane",
@@ -75,7 +76,7 @@ const startRouting = async (req, res) => {
 
     const builder = new Builder({ headless: true });
 
-    const startRoutingObj = {
+    startRoutingObj = {
       CommandList: {
         StartRouting: {
           XmlLoginId: loginId,
@@ -202,6 +203,7 @@ const startRouting = async (req, res) => {
   console.error("StartRouting Error:", err?.response?.status || err.message);
     console.log("rx" , routingXml);
  console.log("res", response.data);
+ console.log("ro", startRoutingObj);
   const statusCode = err?.response?.status || 500;
   const errorMessage =
     err?.response?.data || err.message || "Unknown server error";
