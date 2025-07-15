@@ -177,6 +177,8 @@ const startRouting = async (req, res) => {
       timeout: 120000,
     });
 
+    console.log("rx" , routingXml);
+ console.log("res", response.data);
     if (xmllog === "yes" && xmlreq === "yes") {
       return res.status(200).send(routingXml);
     } else if (xmllog == "yes") {
