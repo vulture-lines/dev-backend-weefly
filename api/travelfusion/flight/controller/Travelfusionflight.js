@@ -115,10 +115,6 @@ const startRouting = async (req, res) => {
                   Name: "IncludeStructuredFeatures",
                   Value: "y",
                 },
-                // {
-                //   Name: "IncludeAlternativeFares",
-                //   Value: "y",
-                // },
                 {
                   Name: "EndUserDeviceMACAddress",
                   Value: req.headers["x-edusermacaddress"] || "not-mac",
@@ -285,10 +281,7 @@ const processDetails = async (req, res) => {
           BookingProfile: {
             CustomSupplierParameterList: {
               CustomSupplierParameter: [
-                // {
-                //   Name: "IncludeStructuredFeatures",
-                //   Value: "y",
-                // },
+
                 {
                   Name: "IncludeAlternativeFares",
                   Value: "y",
