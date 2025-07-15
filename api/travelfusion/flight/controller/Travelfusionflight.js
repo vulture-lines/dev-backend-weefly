@@ -70,7 +70,6 @@ const startRouting = async (req, res) => {
 
     // get loginId
     const loginId = await fetchLoginID();
-
     const builder = new Builder({ headless: true });
 
     const startRoutingObj = {
@@ -81,8 +80,8 @@ const startRouting = async (req, res) => {
           Mode: mode,
           Origin: {
             Descriptor: origin.descriptor,
-            // Type: "airportcode",
-            Type: "airportgroup",
+            Type: "airportcode",
+            // Type: "airportgroup",
           },
           Destination: {
             Descriptor: destination.descriptor,
@@ -143,10 +142,10 @@ const startRouting = async (req, res) => {
                     req.headers["referer"] ||
                     "postman",
                 },
-                {
-                  Name: "Userdata",
-                  Value: JSON.stringify(travellers) || "unknown",
-                },
+                // {
+                //   Name: "Userdata",
+                //   Value: JSON.stringify(travellers) || "unknown",
+                // },
                 {
                   Name: "Pointofsale",
                   Value: "CV",
@@ -191,14 +190,14 @@ const startRouting = async (req, res) => {
         requestdata: response.data,
       });
     }
+       
     res.status(200).json({
       routingId: startRoutingResponse.RoutingId[0],
       // routerList: startRoutingResponse.RouterList || [],
     });
   } catch (err) {
     console.error("StartRouting Error:", err);
-    let login =await fetchLoginID();
-    console.log(login)
+
     res.status(500).json({ error: err.message });
   }
 };
