@@ -193,7 +193,7 @@ exports.startPayment = async (req, res) => {
   //   encodeURIComponent(formData.timeStamp) +
   //   "&FingerPrintVersion=" +
   //   encodeURIComponent(formData.fingerprintversion);
-  
+
   var postURL =
     `${threeDSServerUrl}/CardPayment?FingerPrint=` +
     encodeURIComponent(formData.fingerprint) +
@@ -311,6 +311,7 @@ exports.Paymentresponse = async (req, res) => {
 
         const checkBookingResult = await checkBookingResponse.json();
         console.log("check-booking response", checkBookingResult);
+        const bookingStatus=checkBookingResult.addtionalInfo.Status[0];
         console.log(
           `Booking status: ${checkBookingResult.additionalInfo.Status[0]}`
         );
@@ -323,8 +324,13 @@ exports.Paymentresponse = async (req, res) => {
             },
           }
         );
+        if(bookingStatus.toLowerCase()==="succeeded"){
+          res.status(201).redirect(process.env.SUCCESS_URL);
+        }else if(bookingStatus.toLowerCase()==="failed"){
+          res.status(500).redirect(process.env.UNSUCCESS_URL);
+        }
 
-        res.status(201).redirect(process.env.SUCCESS_URL);
+        
       } catch (error) {
         console.error(error);
       }
