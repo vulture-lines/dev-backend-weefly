@@ -1,4 +1,4 @@
-api/travelfusion/flight/logs
-api/travelfusion/flight/backup
-api/travelfusion/flight/utils
-api/travelfusion/flight/xmllogs
+api/*/flight/logs
+api/*/flight/backup
+api/*/flight/utils
+api/*/flight/xmllogs

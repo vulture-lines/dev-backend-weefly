@@ -20,7 +20,7 @@ const xmlPayload = builder.buildObject({
       "impl:GetAvailability": {
         AirAvailabilityRequest: {
           clientInformation: {
-            clientIP: "129.0.0.1",
+            clientIP: req.headers["x-forwarded-for"] || req.connection.remoteAddress,
             member: false,
             password: password,
             userName: username,
@@ -28,12 +28,12 @@ const xmlPayload = builder.buildObject({
           },
           originDestinationInformationList: {
             dateOffset: 0,
-            departureDateTime: "2025-10-10",
-            destinationLocation: { locationCode: "LIS" },
+        departureDateTime: "2025-07-16", 
+            destinationLocation: { locationCode: "BVR" },
             originLocation: { locationCode: "RAI" },
             flexibleFaresOnly: false,
-            includeInterlineFlights: false,
-            openFlight: false,
+            includeInterlineFlights: true,
+            openFlight: true,
           },
           travelerInformation: {
             passengerTypeQuantityList: {
@@ -53,7 +53,7 @@ const xmlPayload = builder.buildObject({
 
   try {
     const response = await axios.post(
-      "https://tcv-stage.crane.aero/craneota/CraneOTAService",
+      "https://tcv-stage.crane.aero/craneota/CraneOTAService?wsdl",
       xmlPayload,
       {
         headers: {
@@ -63,11 +63,12 @@ const xmlPayload = builder.buildObject({
         timeout: 60000,
       }
     );
-
+    console.log(xmlPayload)
+console.log(response.data)
  
 
     const parsed = await parseStringPromise(response.data, { explicitArray: false });
-    res.json(parsed);
+    res.send(response.data);
   } catch (err) {
        console.log("xm" , xmlPayload)
     console.error("Crane OTA Error:", err);

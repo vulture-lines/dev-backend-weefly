@@ -184,9 +184,18 @@ exports.startPayment = async (req, res) => {
 
   console.log("Sending formData to 3DS Server:", formData);
 
+
   // Payment gateway post URL for test environment
+  // var postURL =
+  //   `${vinti4CvUrl}/CardPayment?FingerPrint=` +
+  //   encodeURIComponent(formData.fingerprint) +
+  //   "&TimeStamp=" +
+  //   encodeURIComponent(formData.timeStamp) +
+  //   "&FingerPrintVersion=" +
+  //   encodeURIComponent(formData.fingerprintversion);
+  
   var postURL =
-    `${vinti4CvUrl}/CardPayment?FingerPrint=` +
+    `${threeDSServerUrl}/CardPayment?FingerPrint=` +
     encodeURIComponent(formData.fingerprint) +
     "&TimeStamp=" +
     encodeURIComponent(formData.timeStamp) +
