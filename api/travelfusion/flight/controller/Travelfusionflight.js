@@ -433,38 +433,6 @@ const processTerms = async (req, res) => {
           csps = [csps];
         }
 
-        csps.push(
-          {
-            Name: "EndUserDeviceMACAddress",
-            Value: req.headers["x-edusermacaddress"] || "not-mac",
-          },
-          {
-            Name: "EndUserIPAddress",
-            Value: (
-              req.ip ||
-              req.connection.remoteAddress ||
-              "unknown"
-            ).replace(/^::ffff:/, ""),
-          },
-          {
-            Name: "EndUserBrowserAgent",
-            Value: req.headers["user-agent"] || "unknown",
-          },
-          {
-            Name: "Requestorigin",
-            Value: req.headers["origin"] || req.headers["referer"] || "postman",
-          },
-          { Name: "UserData", Value: userData }
-        );
-
-        // ✅ Add mandatory CountryOfTheUser
-        if (countryOfUser) {
-          csps.push({
-            Name: "CountryOfTheUser",
-            Value: countryOfUser,
-          });
-        }
-
         // Optional: Add seat if present
         if (seat) {
           csps.push({
@@ -503,6 +471,42 @@ const processTerms = async (req, res) => {
       });
 
       bookingProfileObj.TravellerList.Traveller = travellers;
+      // Build global-level CSP list (used under BookingProfile, not just travellers)
+      const globalCSPs = [
+        {
+          Name: "EndUserDeviceMACAddress",
+          Value: req.headers["x-edusermacaddress"] || "not-mac",
+        },
+        {
+          Name: "EndUserIPAddress",
+          Value: (req.ip || req.connection?.remoteAddress || "unknown").replace(
+            /^::ffff:/,
+            ""
+          ),
+        },
+        {
+          Name: "EndUserBrowserAgent",
+          Value: req.headers["user-agent"] || "unknown",
+        },
+        {
+          Name: "Requestorigin",
+          Value: req.headers["origin"] || req.headers["referer"] || "postman",
+        },
+        { Name: "UserData", Value: userData },
+      ];
+
+      // ✅ Optional: Add CountryOfTheUser globally
+      if (countryOfUser) {
+        globalCSPs.push({
+          Name: "CountryOfTheUser",
+          Value: countryOfUser,
+        });
+      }
+
+      // ✅ Inject into BookingProfile
+      bookingProfileObj.CustomSupplierParameterList = {
+        CustomSupplierParameter: globalCSPs,
+      };
     }
 
     // Build ProcessTerms object
