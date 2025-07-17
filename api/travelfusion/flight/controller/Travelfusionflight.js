@@ -78,7 +78,7 @@ const startRouting = async (req, res) => {
           Mode: mode,
           Origin: {
             Descriptor: origin.descriptor,
-            Type: "airportgroup",
+            Type: "airportcode",
           },
           Destination: {
             Descriptor: destination.descriptor,
