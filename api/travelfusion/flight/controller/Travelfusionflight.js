@@ -62,7 +62,7 @@ const startRouting = async (req, res) => {
       xmlreq,
     } = req.body;
 
-    const preferredLanguage = "ES";
+    const preferredLanguage = "EN";
     if (!origin || !destination || !dateOfSearch || travellers.length === 0) {
       return res.status(400).json({ error: "Missing required fields" });
     }
@@ -78,7 +78,7 @@ const startRouting = async (req, res) => {
           Mode: mode,
           Origin: {
             Descriptor: origin.descriptor,
-            Type: "airportcode",
+            Type: "airportgroup",
           },
           Destination: {
             Descriptor: destination.descriptor,
