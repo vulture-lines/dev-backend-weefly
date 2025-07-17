@@ -274,6 +274,13 @@ exports.Paymentresponse = async (req, res) => {
     if (body.resultFingerPrint === calculatedFingerprint) {
       Paymentstatus = "success";
       try {
+        await Payment.findOneAndUpdate(
+          { merchantSession: body.merchantRespMerchantSession },
+          {
+            Paymentresponse: body,
+            Paymentstatus: Paymentstatus,
+          }
+        );
         const updatedPayment = await Payment.findOne().sort({ _id: -1 });
         const bookingDetails = updatedPayment.TravelfusionBookingDetails;
         console.log("Intiating Booking Process!!", bookingDetails);
@@ -297,7 +304,8 @@ exports.Paymentresponse = async (req, res) => {
         try {
           if (contentType?.includes("application/json")) {
             startBookingData = JSON.parse(responseText);
-            TFBookingReference = startBookingData.TFBookingReference;
+            console.log(startBookingData)
+            TFBookingReference = startBookingData.bookingReference;
           } else if (
             contentType?.includes("application/xml") ||
             contentType?.includes("text/xml")
@@ -323,14 +331,6 @@ exports.Paymentresponse = async (req, res) => {
             details: err.message,
           });
         }
-
-        await Payment.findOneAndUpdate(
-          { merchantSession: body.merchantRespMerchantSession },
-          {
-            Paymentresponse: body,
-            Paymentstatus: Paymentstatus,
-          }
-        );
         await new Promise((resolve) => setTimeout(resolve, 10000));
 
         console.log("Checking Booking status");
@@ -351,15 +351,6 @@ exports.Paymentresponse = async (req, res) => {
         console.log(
           `Booking status: ${checkBookingResult.additionalInfo.Status[0]}`
         );
-        await Payment.findOneAndUpdate(
-          { merchantSession: body.merchantRespMerchantSession },
-          {
-            $set: {
-              "TravelfusionBookingDetails.BookingStatus":
-                checkBookingResult.additionalInfo.Status[0],
-            },
-          }
-        );
         if (bookingStatus.toLowerCase() === "succeeded") {
           res.status(201).redirect(process.env.SUCCESS_URL);
         } else if (bookingStatus.toLowerCase() === "failed") {
@@ -370,7 +361,6 @@ exports.Paymentresponse = async (req, res) => {
       }
     } else {
       Paymentstatus = "failure";
-      console.log("works");
       try {
         await Payment.findOneAndUpdate(
           { merchantSession: body.merchantRespMerchantSession },

@@ -2,3 +2,4 @@ api/*/flight/logs
 api/*/flight/backup
 api/*/flight/utils
 api/*/flight/xmllogs
+backup
