@@ -351,6 +351,17 @@ exports.Paymentresponse = async (req, res) => {
         console.log(
           `Booking status: ${checkBookingResult.additionalInfo.Status[0]}`
         );
+        await Payment.findOneAndUpdate(
+          { merchantSession: body.merchantRespMerchantSession },
+          {
+            $set: {
+              "TravelfusionBookingDetails.BookingStatus": bookingStatus,
+              "TravelfusionBookingDetails.BookingCheckResponse":
+                checkBookingResult, // optional
+            },
+          }
+        );
+
         const status = bookingStatus.toLowerCase();
 
         switch (status) {
