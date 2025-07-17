@@ -412,28 +412,6 @@ const processTerms = async (req, res) => {
 
       // Final UserData string
       const userData = `${Email || ""}, ${phone || ""}, ${fullName}`;
-      csps.push(
-        {
-          Name: "EndUserDeviceMACAddress",
-          Value: req.headers["x-edusermacaddress"] || "not-mac",
-        },
-        {
-          Name: "EndUserIPAddress",
-          Value: (req.ip || req.connection.remoteAddress || "unknown").replace(
-            /^::ffff:/,
-            ""
-          ),
-        },
-        {
-          Name: "EndUserBrowserAgent",
-          Value: req.headers["user-agent"] || "unknown",
-        },
-        {
-          Name: "Requestorigin",
-          Value: req.headers["origin"] || req.headers["referer"] || "postman",
-        },
-        { Name: "UserData", Value: userData }
-      );
 
       // Wrap single traveller in array if needed
       if (!Array.isArray(travellers)) {
@@ -454,6 +432,30 @@ const processTerms = async (req, res) => {
         if (!Array.isArray(csps)) {
           csps = [csps];
         }
+
+        csps.push(
+          {
+            Name: "EndUserDeviceMACAddress",
+            Value: req.headers["x-edusermacaddress"] || "not-mac",
+          },
+          {
+            Name: "EndUserIPAddress",
+            Value: (
+              req.ip ||
+              req.connection.remoteAddress ||
+              "unknown"
+            ).replace(/^::ffff:/, ""),
+          },
+          {
+            Name: "EndUserBrowserAgent",
+            Value: req.headers["user-agent"] || "unknown",
+          },
+          {
+            Name: "Requestorigin",
+            Value: req.headers["origin"] || req.headers["referer"] || "postman",
+          },
+          { Name: "UserData", Value: userData }
+        );
 
         // ✅ Add mandatory CountryOfTheUser
         if (countryOfUser) {
