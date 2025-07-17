@@ -78,14 +78,12 @@ const startRouting = async (req, res) => {
           Mode: mode,
           Origin: {
             Descriptor: origin.descriptor,
-
             Type: "airportcode",
-            Radius: 1000,
           },
           Destination: {
             Descriptor: destination.descriptor,
             Type: "airportcode",
-               Radius: 1000,
+            Radius: 1000,
           },
           OutwardDates: {
             DateOfSearch: dateOfSearch,
@@ -614,7 +612,7 @@ const startBooking = async (req, res) => {
     if (xmllog == "yes") {
       return res.status(200).send(response.data);
     }
-
+    console.log(xml);
     const parsed = await parseStringPromise(response.data);
     const result = parsed?.CommandList?.StartBooking?.[0];
     if (result) {
