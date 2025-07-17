@@ -53,9 +53,7 @@ const startRouting = async (req, res) => {
       origin,
       destination,
       dateOfSearch,
-      returnDateOfSearch, // for return trips
-      // maxChanges = 1,
-      // maxHops = 2,
+      returnDateOfSearch,
       timeout = 40,
       travellers = [],
       incrementalResults = true,
@@ -63,12 +61,12 @@ const startRouting = async (req, res) => {
       xmllog,
       xmlreq,
     } = req.body;
+
     const preferredLanguage = "ES";
     if (!origin || !destination || !dateOfSearch || travellers.length === 0) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // get loginId
     const loginId = await fetchLoginID();
     const builder = new Builder({ headless: true });
 
@@ -81,42 +79,30 @@ const startRouting = async (req, res) => {
           Origin: {
             Descriptor: origin.descriptor,
             Type: "airportcode",
-            // Radius: 1000,
-            // Type: "airportgroup",
           },
           Destination: {
             Descriptor: destination.descriptor,
             Type: "airportcode",
             Radius: 1000,
-            // Type: "airportgroup",
           },
           OutwardDates: {
             DateOfSearch: dateOfSearch,
           },
-          // if return date is provided
           ...(returnDateOfSearch && {
             ReturnDates: {
               DateOfSearch: returnDateOfSearch,
             },
           }),
-          // MaxChanges: maxChanges,
-          // MaxHops: maxHops,
           Timeout: timeout,
-
           TravellerList: {
-            Traveller: travellers.map((age) => ({
-              Age: age,
-            })),
+            Traveller: travellers.map((age) => ({ Age: age })),
           },
           IncrementalResults: incrementalResults,
           ...(travelClass && { SupplierClass: travelClass }),
           BookingProfile: {
             CustomSupplierParameterList: {
               CustomSupplierParameter: [
-                {
-                  Name: "IncludeStructuredFeatures",
-                  Value: "y",
-                },
+                { Name: "IncludeStructuredFeatures", Value: "y" },
                 {
                   Name: "EndUserDeviceMACAddress",
                   Value: req.headers["x-edusermacaddress"] || "not-mac",
@@ -140,21 +126,12 @@ const startRouting = async (req, res) => {
                     req.headers["referer"] ||
                     "postman",
                 },
-                // {
-                //   Name: "Userdata",
-                //   Value: JSON.stringify(travellers) || "unknown",
-                // },
                 {
                   Name: "Pointofsale",
                   Value: "CV",
                 },
                 ...(preferredLanguage
-                  ? [
-                      {
-                        Name: "PreferredLanguage",
-                        Value: preferredLanguage,
-                      },
-                    ]
+                  ? [{ Name: "PreferredLanguage", Value: preferredLanguage }]
                   : []),
               ],
             },
@@ -165,14 +142,38 @@ const startRouting = async (req, res) => {
 
     const routingXml = builder.buildObject(startRoutingObj);
 
-    const response = await axios.post(travelFusionUrl, routingXml, {
-      headers: {
-        "Content-Type": "text/xml; charset=utf-8",
-        Accept: "text/xml",
-        "Accept-Encoding": "gzip, deflate",
-      },
-      timeout: 120000,
-    });
+    let response;
+
+    try {
+      // First attempt with 4s timeout
+      response = await axios.post(travelFusionUrl, routingXml, {
+        headers: {
+          "Content-Type": "text/xml; charset=utf-8",
+          Accept: "text/xml",
+          "Accept-Encoding": "gzip, deflate",
+        },
+        timeout: 4000,
+      });
+    } catch (err) {
+      if (err.code === "ECONNABORTED") {
+        // Retry with 15s timeout
+        try {
+          response = await axios.post(travelFusionUrl, routingXml, {
+            headers: {
+              "Content-Type": "text/xml; charset=utf-8",
+              Accept: "text/xml",
+              "Accept-Encoding": "gzip, deflate",
+            },
+            timeout: 15000,
+          });
+        } catch (retryErr) {
+          console.error("Retry failed:", retryErr.message);
+          return res.status(504).json({ error: "Timeout on both attempts" });
+        }
+      } else {
+        throw err;
+      }
+    }
 
     if (xmllog === "yes" && xmlreq === "yes") {
       return res.status(200).send(routingXml);
@@ -182,6 +183,7 @@ const startRouting = async (req, res) => {
 
     const parsed = await parseStringPromise(response.data);
     const startRoutingResponse = parsed?.CommandList?.StartRouting?.[0];
+
     if (!startRoutingResponse?.RoutingId?.[0]) {
       return res.status(422).json({
         error: "No RoutingId returned",
@@ -191,11 +193,9 @@ const startRouting = async (req, res) => {
 
     res.status(200).json({
       routingId: startRoutingResponse.RoutingId[0],
-      // routerList: startRoutingResponse.RouterList || [],
     });
   } catch (err) {
     console.error("StartRouting Error:", err);
-
     res.status(500).json({ error: err.message });
   }
 };
@@ -213,8 +213,9 @@ const checkRouting = async (req, res) => {
     let parsed;
     let checkRoutingXml;
     let xmlresponse;
+
     while (hasIncomplete) {
-      const loginId = await fetchLoginID(); // start of the rerun part
+      const loginId = await fetchLoginID(); // new login ID each time
 
       checkRoutingXml = new Builder({ headless: true }).buildObject({
         CommandList: {
@@ -226,29 +227,41 @@ const checkRouting = async (req, res) => {
         },
       });
 
-      const response = await axios.post(travelFusionUrl, checkRoutingXml, {
-        headers: {
-          "Content-Type": "text/xml; charset=utf-8",
-          Accept: "text/xml",
-          "Accept-Encoding": "gzip, deflate",
-        },
-        timeout: 120000,
-      });
-      xmlresponse = response.data;
+      try {
+        const response = await axios.post(travelFusionUrl, checkRoutingXml, {
+          headers: {
+            "Content-Type": "text/xml; charset=utf-8",
+            Accept: "text/xml",
+            "Accept-Encoding": "gzip, deflate",
+          },
+          timeout: 7000, // 7-second read timeout
+        });
 
-      parsed = await parseStringPromise(response.data);
-      const checkRoutingResponse = parsed?.CommandList?.CheckRouting?.[0];
-      routeId = checkRoutingResponse?.RoutingId;
-      flightList = checkRoutingResponse?.RouterList;
+        xmlresponse = response.data;
+        parsed = await parseStringPromise(response.data);
 
-      hasIncomplete = (flightList || []).some(
-        (router) => router?.Router?.Complete?.[0]?.toLowerCase() === "false"
-      );
+        const checkRoutingResponse = parsed?.CommandList?.CheckRouting?.[0];
+        routeId = checkRoutingResponse?.RoutingId;
+        flightList = checkRoutingResponse?.RouterList;
+
+        hasIncomplete = (flightList || []).some(
+          (router) => router?.Router?.Complete?.[0]?.toLowerCase() === "false"
+        );
+      } catch (err) {
+        if (err.code === "ECONNABORTED") {
+          console.warn("CheckRouting timeout — continuing polling loop");
+          // Assume incomplete and continue loop
+          hasIncomplete = true;
+          continue;
+        } else {
+          throw err; // For other errors, break the loop and return error
+        }
+      }
     }
 
     if (xmllog === "yes" && xmlreq === "yes") {
       return res.status(200).send(checkRoutingXml);
-    } else if (xmllog == "yes") {
+    } else if (xmllog === "yes") {
       return res.status(200).send(xmlresponse);
     }
 
@@ -303,7 +316,7 @@ const processDetails = async (req, res) => {
         Accept: "text/xml",
         "Accept-Encoding": "gzip, deflate",
       },
-      timeout: 120000,
+      timeout: 150000,
     });
 
     if (xmllog === "yes" && xmlreq === "yes") {
@@ -473,7 +486,7 @@ const processTerms = async (req, res) => {
         Accept: "text/xml",
         "Accept-Encoding": "gzip, deflate",
       },
-      timeout: 120000,
+      timeout: 150000,
     });
 
     if (xmllog === "yes" && xmlreq === "yes") {
@@ -543,7 +556,7 @@ const startBooking = async (req, res) => {
         Accept: "text/xml",
         "Accept-Encoding": "gzip, deflate",
       },
-      timeout: 120000,
+      timeout: 20000,
     });
     if (xmllog == "yes") {
       return res.status(200).send(response.data);
@@ -568,8 +581,11 @@ const startBooking = async (req, res) => {
 const checkBooking = async (req, res) => {
   try {
     const { TFBookingReference, xmllog, xmlreq } = req.body;
-    const loginId = await fetchLoginID();
+    if (!TFBookingReference) {
+      return res.status(400).json({ error: "TFBookingReference is required" });
+    }
 
+    const loginId = await fetchLoginID();
     const builder = new Builder({ headless: true });
 
     const checkBookingObj = {
@@ -584,18 +600,31 @@ const checkBooking = async (req, res) => {
 
     const xml = builder.buildObject(checkBookingObj);
 
-    const response = await axios.post(travelFusionUrl, xml, {
-      headers: {
-        "Content-Type": "text/xml; charset=utf-8",
-        Accept: "text/xml",
-        "Accept-Encoding": "gzip, deflate",
-      },
-      timeout: 120000,
-    });
+    let response;
+    try {
+      response = await axios.post(travelFusionUrl, xml, {
+        headers: {
+          "Content-Type": "text/xml; charset=utf-8",
+          Accept: "text/xml",
+          "Accept-Encoding": "gzip, deflate",
+        },
+        timeout: 10000,
+      });
+    } catch (error) {
+      if (error.code === "ECONNABORTED") {
+        // Timeout occurred – return a specific response or trigger retry logic
+        console.warn("CheckBooking timed out, continuing polling...");
+        return res.status(202).json({
+          message: "Timeout occurred. Continue polling.",
+        });
+      } else {
+        throw error; // rethrow other errors
+      }
+    }
 
     if (xmllog === "yes" && xmlreq === "yes") {
       return res.status(200).send(xml);
-    } else if (xmllog == "yes") {
+    } else if (xmllog === "yes") {
       return res.status(200).send(response.data);
     }
 

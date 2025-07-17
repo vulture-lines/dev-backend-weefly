@@ -4,6 +4,7 @@ const moment = require("moment");
 const dotenv = require("dotenv");
 const { Countrycode } = require("../utils/Countrycodeconverter");
 const { Payment } = require("../models/SISSPPaymentdb");
+const { parseStringPromise } = require("xml2js");
 dotenv.config();
 // Test credentials and config
 const posID = process.env.POSID;
@@ -184,7 +185,6 @@ exports.startPayment = async (req, res) => {
 
   console.log("Sending formData to 3DS Server:", formData);
 
-
   // Payment gateway post URL for test environment
   // var postURL =
   //   `${vinti4CvUrl}/CardPayment?FingerPrint=` +
@@ -274,15 +274,9 @@ exports.Paymentresponse = async (req, res) => {
     if (body.resultFingerPrint === calculatedFingerprint) {
       Paymentstatus = "success";
       try {
-        await Payment.findOneAndUpdate(
-          { merchantSession: body.merchantRespMerchantSession },
-          {
-            Paymentresponse: body,
-            Paymentstatus: Paymentstatus,
-          }
-        );
         const updatedPayment = await Payment.findOne().sort({ _id: -1 });
         const bookingDetails = updatedPayment.TravelfusionBookingDetails;
+        console.log("Intiating Booking Process!!", bookingDetails);
         const startBookingResult = await fetch(
           `${travelFusionApi}/start-booking`,
           {
@@ -293,10 +287,52 @@ exports.Paymentresponse = async (req, res) => {
             body: JSON.stringify(bookingDetails),
           }
         );
-        console.log("Intiating Booking Process!!");
-        console.log("start-booking response", startBookingResult);
-        const TFBookingReference = bookingDetails.TFBookingReference;
+
+        const responseText = await startBookingResult.text();
+        const contentType = startBookingResult.headers.get("content-type");
+
+        let startBookingData;
+        let TFBookingReference;
+
+        try {
+          if (contentType?.includes("application/json")) {
+            startBookingData = JSON.parse(responseText);
+            TFBookingReference = startBookingData.TFBookingReference;
+          } else if (
+            contentType?.includes("application/xml") ||
+            contentType?.includes("text/xml")
+          ) {
+            const parsedXml = await parseStringPromise(responseText);
+            startBookingData = parsedXml;
+            console.log(parsedXml);
+          } else {
+            console.error("Unsupported content-type:", contentType);
+            console.error("Raw response from start-booking:", responseText);
+            throw new Error("Unsupported content-type: " + contentType);
+          }
+
+          if (!TFBookingReference) {
+            throw new Error("TFBookingReference not found in parsed response");
+          }
+
+          console.log("start-booking TFBookingReference:", TFBookingReference);
+        } catch (err) {
+          console.error("Failed to parse start-booking response:", err.message);
+          return res.status(502).json({
+            error: "Invalid start-booking response",
+            details: err.message,
+          });
+        }
+
+        await Payment.findOneAndUpdate(
+          { merchantSession: body.merchantRespMerchantSession },
+          {
+            Paymentresponse: body,
+            Paymentstatus: Paymentstatus,
+          }
+        );
         await new Promise((resolve) => setTimeout(resolve, 10000));
+
         console.log("Checking Booking status");
         const checkBookingResponse = await fetch(
           `${travelFusionApi}/check-booking`,
@@ -311,7 +347,7 @@ exports.Paymentresponse = async (req, res) => {
 
         const checkBookingResult = await checkBookingResponse.json();
         console.log("check-booking response", checkBookingResult);
-        const bookingStatus=checkBookingResult.addtionalInfo.Status[0];
+        const bookingStatus = checkBookingResult.additionalInfo.Status[0];
         console.log(
           `Booking status: ${checkBookingResult.additionalInfo.Status[0]}`
         );
@@ -324,13 +360,11 @@ exports.Paymentresponse = async (req, res) => {
             },
           }
         );
-        if(bookingStatus.toLowerCase()==="succeeded"){
+        if (bookingStatus.toLowerCase() === "succeeded") {
           res.status(201).redirect(process.env.SUCCESS_URL);
-        }else if(bookingStatus.toLowerCase()==="failed"){
+        } else if (bookingStatus.toLowerCase() === "failed") {
           res.status(500).redirect(process.env.UNSUCCESS_URL);
         }
-
-        
       } catch (error) {
         console.error(error);
       }
