@@ -304,7 +304,7 @@ exports.Paymentresponse = async (req, res) => {
         try {
           if (contentType?.includes("application/json")) {
             startBookingData = JSON.parse(responseText);
-            console.log(startBookingData)
+            console.log(startBookingData);
             TFBookingReference = startBookingData.bookingReference;
           } else if (
             contentType?.includes("application/xml") ||
@@ -351,10 +351,32 @@ exports.Paymentresponse = async (req, res) => {
         console.log(
           `Booking status: ${checkBookingResult.additionalInfo.Status[0]}`
         );
-        if (bookingStatus.toLowerCase() === "succeeded") {
-          res.status(201).redirect(process.env.SUCCESS_URL);
-        } else if (bookingStatus.toLowerCase() === "failed") {
-          res.status(500).redirect(process.env.UNSUCCESS_URL);
+        const status = bookingStatus.toLowerCase();
+
+        switch (status) {
+          case "succeeded":
+            res.status(201).redirect(process.env.SUCCESS_URL);
+            break;
+
+          case "failed":
+            res.status(500).redirect(process.env.UNSUCCESS_URL);
+            break;
+
+          case "bookinginprogress":
+            res.status(202).redirect(process.env.UNCONFIRMED_URL);
+            break;
+
+          case "unconfirmed":
+            res.status(202).redirect(process.env.UNCONFIRMED_URL);
+            break;
+
+          case "unconfirmedbysupplier":
+            res.status(202).redirect(process.env.UNCONFIRMED_SUPPLIER_URL);
+            break;
+
+          default:
+            res.status(400).redirect(process.env.ERROR_URL);
+            break;
         }
       } catch (error) {
         console.error(error);
