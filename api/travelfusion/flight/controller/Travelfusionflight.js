@@ -389,6 +389,51 @@ const processTerms = async (req, res) => {
     // Assign seat/luggage/CSPs per traveller
     if (bookingProfileObj.TravellerList?.Traveller) {
       let travellers = bookingProfileObj.TravellerList.Traveller;
+      const {
+        ContactDetails: {
+          Email,
+          MobilePhone,
+          Name: { Title, NamePartList },
+        } = {},
+      } = bookingProfile;
+
+      // Build phone string
+      const phone = MobilePhone
+        ? `${MobilePhone.InternationalCode || ""}${MobilePhone.AreaCode || ""}${
+            MobilePhone.Number || ""
+          }`
+        : "";
+
+      // Build full name from NamePart array
+      const nameParts = Array.isArray(NamePartList?.NamePart)
+        ? NamePartList.NamePart.join(" ")
+        : "";
+      const fullName = `${Title || ""} ${nameParts}`.trim();
+
+      // Final UserData string
+      const userData = `${Email || ""}, ${phone || ""}, ${fullName}`;
+      csps.push(
+        {
+          Name: "EndUserDeviceMACAddress",
+          Value: req.headers["x-edusermacaddress"] || "not-mac",
+        },
+        {
+          Name: "EndUserIPAddress",
+          Value: (req.ip || req.connection.remoteAddress || "unknown").replace(
+            /^::ffff:/,
+            ""
+          ),
+        },
+        {
+          Name: "EndUserBrowserAgent",
+          Value: req.headers["user-agent"] || "unknown",
+        },
+        {
+          Name: "Requestorigin",
+          Value: req.headers["origin"] || req.headers["referer"] || "postman",
+        },
+        { Name: "UserData", Value: userData }
+      );
 
       // Wrap single traveller in array if needed
       if (!Array.isArray(travellers)) {
