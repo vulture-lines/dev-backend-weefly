@@ -484,8 +484,8 @@ const processTerms = async (req, res) => {
       TravellerList: {
         Traveller: travellers,
       },
-      ContactDetails: bookingProfile.ContactDetails || {},
-      BillingDetails: bookingProfile.BillingDetails || {},
+      ContactDetails: bookingProfile.ContactDetails,
+      BillingDetails: bookingProfile.BillingDetails 
       // Add more fields here if necessary
     };
 
