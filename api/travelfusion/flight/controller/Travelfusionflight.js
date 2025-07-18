@@ -60,6 +60,8 @@ const startRouting = async (req, res) => {
       travelClass,
       xmllog,
       xmlreq,
+      maxChanges = 1,
+      maxHops = 2,
     } = req.body;
 
     const preferredLanguage = "EN";
@@ -79,6 +81,7 @@ const startRouting = async (req, res) => {
           Origin: {
             Descriptor: origin.descriptor,
             Type: "airportcode",
+            Radius: 1000,
           },
           Destination: {
             Descriptor: destination.descriptor,
@@ -93,6 +96,8 @@ const startRouting = async (req, res) => {
               DateOfSearch: returnDateOfSearch,
             },
           }),
+          MaxChanges: maxChanges,
+          MaxHops: maxHops,
           Timeout: timeout,
           TravellerList: {
             Traveller: travellers.map((age) => ({ Age: age })),
@@ -977,7 +982,7 @@ const getAirports = async (req, res) => {
 const getSupplierRoutes = async (req, res) => {
   try {
     const loginId = await fetchLoginID();
-    const suppliers = ["easyjet", "americanairlines"]; // Hardcoded suppliers
+    const suppliers = ["ezy"]; // Hardcoded suppliers
     const builder = new Builder({ headless: true });
 
     const allRoutes = [];
