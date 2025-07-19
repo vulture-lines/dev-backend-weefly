@@ -3,6 +3,7 @@ require("dotenv").config();
 const axios = require("axios");
 const { Builder } = require("xml2js");
 const { parseStringPromise } = require("xml2js");
+const geoip = require("geoip-lite");
 // const { fetchLoginID } = require("../../Loginidgenerator"); // Import the login function
 const cache = require("../../../utils/Cache");
 const travelFusionUrl = process.env.TRAVEL_FUSION_API_URL;
@@ -60,6 +61,7 @@ const startRouting = async (req, res) => {
       travelClass,
       xmllog,
       xmlreq,
+      // location,
       maxChanges = 1,
       maxHops = 2,
     } = req.body;
@@ -67,6 +69,17 @@ const startRouting = async (req, res) => {
     const preferredLanguage = "EN";
     if (!origin || !destination || !dateOfSearch || travellers.length === 0) {
       return res.status(422).json({ error: "Missing required fields" });
+    }
+    let countryCode;
+    try {
+      const ip =
+        req.ip ||
+        req.connection.remoteAddress ||
+        req.headers["x-edusermacaddress"];
+      const geo = geoip.lookup(ip);
+      countryCode = geo.country;
+    } catch (error) {
+      console.log(error);
     }
 
     // const loginId = await fetchLoginID();
@@ -125,16 +138,17 @@ const startRouting = async (req, res) => {
                   Value: req.headers["user-agent"] || "unknown",
                 },
                 {
-                  Name: "Requestorigin",
+                  Name: "REQUESTORIGIN",
                   Value:
                     req.headers["origin"] ||
                     req.headers["referer"] ||
                     "postman",
                 },
                 {
-                  Name: "Pointofsale",
-                  Value: "CV",
+                  Name: "POINTOFSALE",
+                  Value: countryCode || "CV",
                 },
+
                 ...(preferredLanguage
                   ? [{ Name: "PreferredLanguage", Value: preferredLanguage }]
                   : []),
@@ -938,7 +952,9 @@ const getAirports = async (req, res) => {
     // const loginId = await fetchLoginID();
     const cachedData = cache.get("airportData");
     if (cachedData) {
-      return res.status(201).json({ Airportdata: cachedData ,message:"fromcache" });
+      return res
+        .status(200)
+        .json({ Airportdata: cachedData, message: "fromcache" });
     }
     const builder = new Builder({ headless: true });
 
