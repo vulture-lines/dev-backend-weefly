@@ -61,7 +61,7 @@ const startRouting = async (req, res) => {
       travelClass,
       xmllog,
       xmlreq,
-      // location,
+      location,
       maxChanges = 1,
       maxHops = 2,
     } = req.body;
@@ -71,21 +71,9 @@ const startRouting = async (req, res) => {
       return res.status(422).json({ error: "Missing required fields" });
     }
     let countryCode;
-    let geo
-    try {
-      const ip =
-        req.ip ||
-        req.connection.remoteAddress ||
-        req.headers["x-edusermacaddress"];
-      geo = geoip.lookup(ip);
-      if(geo==null){
-        return res.status(422).json({ error: "Unable to determine your location" });
-      }
-      countryCode = geo.country;
-    } catch (error) {
-      console.log(error);
-      return res.json({geo:geo})
-    }
+    if (location) {
+      
+    } 
 
     // const loginId = await fetchLoginID();
     const builder = new Builder({ headless: true });
@@ -151,7 +139,7 @@ const startRouting = async (req, res) => {
                 },
                 {
                   Name: "POINTOFSALE",
-                  Value: countryCode || "CV",
+                  Value: countryCode|| "CV",
                 },
 
                 ...(preferredLanguage
