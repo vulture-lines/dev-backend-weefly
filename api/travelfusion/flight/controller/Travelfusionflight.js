@@ -938,7 +938,7 @@ const getAirports = async (req, res) => {
     // const loginId = await fetchLoginID();
     const cachedData = cache.get("airportData");
     if (cachedData) {
-      return res.status(201).json({ Airportdata: cachedData });
+      return res.status(201).json({ Airportdata: cachedData ,message:"fromcache" });
     }
     const builder = new Builder({ headless: true });
 
