@@ -3,13 +3,15 @@ require("dotenv").config();
 const axios = require("axios");
 const { Builder } = require("xml2js");
 const { parseStringPromise } = require("xml2js");
-const { fetchLoginID } = require("../../Loginidgenerator"); // Import the login function
+const redis = require("redis");
+const { promisify } = require("util");
+// const { fetchLoginID } = require("../../Loginidgenerator"); // Import the login function
 
 const travelFusionUrl = process.env.TRAVEL_FUSION_API_URL;
-const loginId=process.env.XML_LOGIN_ID;
+const loginId = process.env.XML_LOGIN_ID;
 const getBranchSupplierList = async (req, res) => {
   try {
-     // const loginId = await fetchLoginID();
+    // const loginId = await fetchLoginID();
 
     // build the XML structure
     const builder = new Builder({ headless: true });
@@ -69,7 +71,7 @@ const startRouting = async (req, res) => {
       return res.status(422).json({ error: "Missing required fields" });
     }
 
-     // const loginId = await fetchLoginID();
+    // const loginId = await fetchLoginID();
     const builder = new Builder({ headless: true });
 
     const startRoutingObj = {
@@ -220,7 +222,7 @@ const checkRouting = async (req, res) => {
     let xmlresponse;
 
     while (hasIncomplete) {
-       // const loginId = await fetchLoginID(); // new login ID each time
+      // const loginId = await fetchLoginID(); // new login ID each time
 
       checkRoutingXml = new Builder({ headless: true }).buildObject({
         CommandList: {
@@ -287,7 +289,7 @@ const processDetails = async (req, res) => {
         .json({ error: "RoutingId and OutwardId are required" });
     }
 
-     // const loginId = await fetchLoginID();
+    // const loginId = await fetchLoginID();
 
     const requestObj = {
       CommandList: {
@@ -386,7 +388,7 @@ const processTerms = async (req, res) => {
       });
     }
 
-     // const loginId = await fetchLoginID();
+    // const loginId = await fetchLoginID();
 
     const {
       ContactDetails: {
@@ -557,8 +559,8 @@ const startBooking = async (req, res) => {
       xmllog,
     } = req.body;
 
-     // const loginId = await fetchLoginID();
-    if(!TFBookingReference && !expectedAmount && !expectedCurrency) {
+    // const loginId = await fetchLoginID();
+    if (!TFBookingReference && !expectedAmount && !expectedCurrency) {
       return res.status(422).json({ error: "Missing required parameters" });
     }
     const builder = new Builder({ headless: true });
@@ -625,7 +627,7 @@ const checkBooking = async (req, res) => {
       return res.status(422).json({ error: "TFBookingReference is required" });
     }
 
-     // const loginId = await fetchLoginID();
+    // const loginId = await fetchLoginID();
     const builder = new Builder({ headless: true });
 
     const checkBookingObj = {
@@ -685,7 +687,7 @@ const checkBooking = async (req, res) => {
 const getBookingDetails = async (req, res) => {
   try {
     const { TFBookingReference, xmllog, xmlreq } = req.body;
-     // const loginId = await fetchLoginID();
+    // const loginId = await fetchLoginID();
     if (!TFBookingReference) {
       return res.status(400).json({ error: "TFBookingReference is required" });
     }
@@ -738,7 +740,7 @@ const getBookingDetailsForCancellation = async (req, res) => {
       return res.status(422).json({ error: "TFBookingReference is required" });
     }
 
-     // const loginId = await fetchLoginID();
+    // const loginId = await fetchLoginID();
     const customSupplierParams = [
       {
         Name: "IsBookingForCancellation",
@@ -796,7 +798,7 @@ const startBookingCancelPlane = async (req, res) => {
       });
     }
 
-     // const loginId = await fetchLoginID();
+    // const loginId = await fetchLoginID();
 
     // Build BookingProfile with optional CustomSupplierParameters
     let bookingProfile = undefined;
@@ -855,7 +857,7 @@ const checkBookingCancelPlane = async (req, res) => {
       });
     }
 
-     // const loginId = await fetchLoginID();
+    // const loginId = await fetchLoginID();
 
     const requestObj = {
       CommandList: {
@@ -898,7 +900,7 @@ const checkBookingCancelPlane = async (req, res) => {
 
 const getCurrencyList = async (req, res) => {
   try {
-     // const loginId = await fetchLoginID();
+    // const loginId = await fetchLoginID();
 
     const builder = new Builder({ headless: true });
 
@@ -933,7 +935,7 @@ const getCurrencyList = async (req, res) => {
   }
 };
 
-const getAirports = async (req, res) => {
+/*const getAirports = async (req, res) => {
   try {
      // const loginId = await fetchLoginID();
 
@@ -981,11 +983,11 @@ const getAirports = async (req, res) => {
     console.error("Getting Airport Code Error", error.message);
     res.status(500).json({ error: error.message });
   }
-};
+};*/
 
 const getSupplierRoutes = async (req, res) => {
   try {
-     // const loginId = await fetchLoginID();
+    // const loginId = await fetchLoginID();
     const suppliers = ["ezy"]; // Hardcoded suppliers
     const builder = new Builder({ headless: true });
 
@@ -1038,6 +1040,73 @@ const getSupplierRoutes = async (req, res) => {
   }
 };
 
+const getAirports = async (req, res) => {
+  // Create Redis client
+  const redisClient = redis.createClient();
+
+  // Promisify Redis methods
+  const getAsync = promisify(redisClient.get).bind(redisClient);
+  const setAsync = promisify(redisClient.set).bind(redisClient);
+
+  // Optional: handle Redis connection errors
+  redisClient.on("error", (err) => console.error("Redis Error:", err));
+  try {
+    const flag = await getAsync("airport_api_called");
+
+    if (flag === "true") {
+      return res.status(429).json({
+        error:
+          "This API can only be called once per 24 hours. Please try again later.",
+      });
+    }
+
+    // const loginId = await fetchLoginID();
+    const builder = new Builder({ headless: true });
+
+    const currencyObj = {
+      CommandList: {
+        GetAirportsData: {
+          XmlLoginId: loginId,
+          LoginId: loginId,
+        },
+      },
+    };
+
+    const xml = builder.buildObject(currencyObj);
+
+    const response = await axios.post(travelFusionUrl, xml, {
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        Accept: "text/xml",
+        "Accept-Encoding": "gzip, deflate",
+      },
+      timeout: 120000,
+    });
+
+    const parsed = await parseStringPromise(response.data);
+    const airports =
+      parsed?.CommandList?.GetAirportsData[0]?.AirportList?.[0]?.Airport;
+
+    const simplifiedAirports = airports.map((airport) => {
+      return {
+        Iata: airport.IataCode?.[0] || null,
+        Airportname:
+          airport.AirportNameList?.[0]?.AirportName?.[0]?.Name?.[0] || null,
+        Cityname: airport.City?.[0]?.CityName?.[0] || null,
+        Countrycode: airport.Country?.[0]?.CountryCode?.[0] || null,
+        Countryname: airport.Country?.[0]?.CountryName?.[0] || null,
+      };
+    });
+
+    // ✅ Set Redis key with 24-hour expiry (86400 seconds)
+    await setAsync("airport_api_called", "true", "EX", 86400);
+
+    res.status(200).json({ Airportdata: simplifiedAirports });
+  } catch (error) {
+    console.error("Getting Airport Code Error:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+};
 module.exports = {
   startRouting,
   checkRouting,
