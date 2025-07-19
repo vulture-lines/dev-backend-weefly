@@ -3,8 +3,6 @@ require("dotenv").config();
 const axios = require("axios");
 const { Builder } = require("xml2js");
 const { parseStringPromise } = require("xml2js");
-const redis = require("redis");
-const { promisify } = require("util");
 // const { fetchLoginID } = require("../../Loginidgenerator"); // Import the login function
 
 const travelFusionUrl = process.env.TRAVEL_FUSION_API_URL;
@@ -934,8 +932,7 @@ const getCurrencyList = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
-/*const getAirports = async (req, res) => {
+const getAirports = async (req, res) => {
   try {
      // const loginId = await fetchLoginID();
 
@@ -983,7 +980,7 @@ const getCurrencyList = async (req, res) => {
     console.error("Getting Airport Code Error", error.message);
     res.status(500).json({ error: error.message });
   }
-};*/
+};
 
 const getSupplierRoutes = async (req, res) => {
   try {
@@ -1040,73 +1037,8 @@ const getSupplierRoutes = async (req, res) => {
   }
 };
 
-const getAirports = async (req, res) => {
-  // Create Redis client
-  const redisClient = redis.createClient();
 
-  // Promisify Redis methods
-  const getAsync = promisify(redisClient.get).bind(redisClient);
-  const setAsync = promisify(redisClient.set).bind(redisClient);
 
-  // Optional: handle Redis connection errors
-  redisClient.on("error", (err) => console.error("Redis Error:", err));
-  try {
-    const flag = await getAsync("airport_api_called");
-
-    if (flag === "true") {
-      return res.status(429).json({
-        error:
-          "This API can only be called once per 24 hours. Please try again later.",
-      });
-    }
-
-    // const loginId = await fetchLoginID();
-    const builder = new Builder({ headless: true });
-
-    const currencyObj = {
-      CommandList: {
-        GetAirportsData: {
-          XmlLoginId: loginId,
-          LoginId: loginId,
-        },
-      },
-    };
-
-    const xml = builder.buildObject(currencyObj);
-
-    const response = await axios.post(travelFusionUrl, xml, {
-      headers: {
-        "Content-Type": "text/xml; charset=utf-8",
-        Accept: "text/xml",
-        "Accept-Encoding": "gzip, deflate",
-      },
-      timeout: 120000,
-    });
-
-    const parsed = await parseStringPromise(response.data);
-    const airports =
-      parsed?.CommandList?.GetAirportsData[0]?.AirportList?.[0]?.Airport;
-
-    const simplifiedAirports = airports.map((airport) => {
-      return {
-        Iata: airport.IataCode?.[0] || null,
-        Airportname:
-          airport.AirportNameList?.[0]?.AirportName?.[0]?.Name?.[0] || null,
-        Cityname: airport.City?.[0]?.CityName?.[0] || null,
-        Countrycode: airport.Country?.[0]?.CountryCode?.[0] || null,
-        Countryname: airport.Country?.[0]?.CountryName?.[0] || null,
-      };
-    });
-
-    // ✅ Set Redis key with 24-hour expiry (86400 seconds)
-    await setAsync("airport_api_called", "true", "EX", 86400);
-
-    res.status(200).json({ Airportdata: simplifiedAirports });
-  } catch (error) {
-    console.error("Getting Airport Code Error:", error.message);
-    res.status(500).json({ error: error.message });
-  }
-};
 module.exports = {
   startRouting,
   checkRouting,
