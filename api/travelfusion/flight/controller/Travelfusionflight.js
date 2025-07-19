@@ -66,7 +66,7 @@ const startRouting = async (req, res) => {
 
     const preferredLanguage = "EN";
     if (!origin || !destination || !dateOfSearch || travellers.length === 0) {
-      return res.status(400).json({ error: "Missing required fields" });
+      return res.status(422).json({ error: "Missing required fields" });
     }
 
      // const loginId = await fetchLoginID();
@@ -209,7 +209,7 @@ const checkRouting = async (req, res) => {
   try {
     const { routingId, xmllog, xmlreq } = req.body;
     if (!routingId) {
-      return res.status(400).json({ error: "RoutingId is required" });
+      return res.status(422).json({ error: "RoutingId is required" });
     }
 
     let flightList = [];
@@ -283,7 +283,7 @@ const processDetails = async (req, res) => {
 
     if (!routingId || !outwardId) {
       return res
-        .status(400)
+        .status(422)
         .json({ error: "RoutingId and OutwardId are required" });
     }
 
@@ -381,7 +381,7 @@ const processTerms = async (req, res) => {
     } = req.body;
 
     if (!routingId || !bookingProfile) {
-      return res.status(400).json({
+      return res.status(422).json({
         error: "routingId and bookingProfile are required",
       });
     }
@@ -558,7 +558,9 @@ const startBooking = async (req, res) => {
     } = req.body;
 
      // const loginId = await fetchLoginID();
-
+    if(!TFBookingReference && !expectedAmount && !expectedCurrency) {
+      return res.status(422).json({ error: "Missing required parameters" });
+    }
     const builder = new Builder({ headless: true });
 
     const startBookingObj = {
@@ -620,7 +622,7 @@ const checkBooking = async (req, res) => {
   try {
     const { TFBookingReference, xmllog, xmlreq } = req.body;
     if (!TFBookingReference) {
-      return res.status(400).json({ error: "TFBookingReference is required" });
+      return res.status(422).json({ error: "TFBookingReference is required" });
     }
 
      // const loginId = await fetchLoginID();
@@ -684,7 +686,9 @@ const getBookingDetails = async (req, res) => {
   try {
     const { TFBookingReference, xmllog, xmlreq } = req.body;
      // const loginId = await fetchLoginID();
-
+    if (!TFBookingReference) {
+      return res.status(400).json({ error: "TFBookingReference is required" });
+    }
     const builder = new Builder({ headless: true });
 
     const getBookingObj = {
@@ -731,7 +735,7 @@ const getBookingDetailsForCancellation = async (req, res) => {
     const { TFBookingReference, customParams = [] } = req.body;
 
     if (!TFBookingReference) {
-      return res.status(400).json({ error: "TFBookingReference is required" });
+      return res.status(422).json({ error: "TFBookingReference is required" });
     }
 
      // const loginId = await fetchLoginID();
@@ -787,7 +791,7 @@ const startBookingCancelPlane = async (req, res) => {
     const { TFBookingReference, customSupplierParameters = [] } = req.body;
 
     if (!TFBookingReference) {
-      return res.status(400).json({
+      return res.status(422).json({
         error: "TFBookingReference is required",
       });
     }
@@ -846,7 +850,7 @@ const checkBookingCancelPlane = async (req, res) => {
     const { TFBookingReference } = req.body;
 
     if (!TFBookingReference) {
-      return res.status(400).json({
+      return res.status(422).json({
         error: "TFBookingReference is required",
       });
     }
