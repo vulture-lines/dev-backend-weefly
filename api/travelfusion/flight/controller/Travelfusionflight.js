@@ -71,15 +71,20 @@ const startRouting = async (req, res) => {
       return res.status(422).json({ error: "Missing required fields" });
     }
     let countryCode;
+    let geo
     try {
       const ip =
         req.ip ||
         req.connection.remoteAddress ||
         req.headers["x-edusermacaddress"];
-      const geo = geoip.lookup(ip);
+      geo = geoip.lookup(ip);
+      if(geo==null){
+        return res.status(422).json({ error: "Unable to determine your location" });
+      }
       countryCode = geo.country;
     } catch (error) {
       console.log(error);
+      return res.json({geo:geo})
     }
 
     // const loginId = await fetchLoginID();
