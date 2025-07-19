@@ -6,10 +6,10 @@ const { parseStringPromise } = require("xml2js");
 const { fetchLoginID } = require("../../Loginidgenerator"); // Import the login function
 
 const travelFusionUrl = process.env.TRAVEL_FUSION_API_URL;
-
+const loginId=process.env.XML_LOGIN_ID;
 const getBranchSupplierList = async (req, res) => {
   try {
-    const loginId = await fetchLoginID();
+     // const loginId = await fetchLoginID();
 
     // build the XML structure
     const builder = new Builder({ headless: true });
@@ -69,7 +69,7 @@ const startRouting = async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const loginId = await fetchLoginID();
+     // const loginId = await fetchLoginID();
     const builder = new Builder({ headless: true });
 
     const startRoutingObj = {
@@ -220,7 +220,7 @@ const checkRouting = async (req, res) => {
     let xmlresponse;
 
     while (hasIncomplete) {
-      const loginId = await fetchLoginID(); // new login ID each time
+       // const loginId = await fetchLoginID(); // new login ID each time
 
       checkRoutingXml = new Builder({ headless: true }).buildObject({
         CommandList: {
@@ -287,7 +287,7 @@ const processDetails = async (req, res) => {
         .json({ error: "RoutingId and OutwardId are required" });
     }
 
-    const loginId = await fetchLoginID();
+     // const loginId = await fetchLoginID();
 
     const requestObj = {
       CommandList: {
@@ -386,7 +386,7 @@ const processTerms = async (req, res) => {
       });
     }
 
-    const loginId = await fetchLoginID();
+     // const loginId = await fetchLoginID();
 
     const {
       ContactDetails: {
@@ -557,7 +557,7 @@ const startBooking = async (req, res) => {
       xmllog,
     } = req.body;
 
-    const loginId = await fetchLoginID();
+     // const loginId = await fetchLoginID();
 
     const builder = new Builder({ headless: true });
 
@@ -623,7 +623,7 @@ const checkBooking = async (req, res) => {
       return res.status(400).json({ error: "TFBookingReference is required" });
     }
 
-    const loginId = await fetchLoginID();
+     // const loginId = await fetchLoginID();
     const builder = new Builder({ headless: true });
 
     const checkBookingObj = {
@@ -683,7 +683,7 @@ const checkBooking = async (req, res) => {
 const getBookingDetails = async (req, res) => {
   try {
     const { TFBookingReference, xmllog, xmlreq } = req.body;
-    const loginId = await fetchLoginID();
+     // const loginId = await fetchLoginID();
 
     const builder = new Builder({ headless: true });
 
@@ -734,7 +734,7 @@ const getBookingDetailsForCancellation = async (req, res) => {
       return res.status(400).json({ error: "TFBookingReference is required" });
     }
 
-    const loginId = await fetchLoginID();
+     // const loginId = await fetchLoginID();
     const customSupplierParams = [
       {
         Name: "IsBookingForCancellation",
@@ -792,7 +792,7 @@ const startBookingCancelPlane = async (req, res) => {
       });
     }
 
-    const loginId = await fetchLoginID();
+     // const loginId = await fetchLoginID();
 
     // Build BookingProfile with optional CustomSupplierParameters
     let bookingProfile = undefined;
@@ -851,7 +851,7 @@ const checkBookingCancelPlane = async (req, res) => {
       });
     }
 
-    const loginId = await fetchLoginID();
+     // const loginId = await fetchLoginID();
 
     const requestObj = {
       CommandList: {
@@ -894,7 +894,7 @@ const checkBookingCancelPlane = async (req, res) => {
 
 const getCurrencyList = async (req, res) => {
   try {
-    const loginId = await fetchLoginID();
+     // const loginId = await fetchLoginID();
 
     const builder = new Builder({ headless: true });
 
@@ -931,7 +931,7 @@ const getCurrencyList = async (req, res) => {
 
 const getAirports = async (req, res) => {
   try {
-    const loginId = await fetchLoginID();
+     // const loginId = await fetchLoginID();
 
     const builder = new Builder({ headless: true });
 
@@ -981,7 +981,7 @@ const getAirports = async (req, res) => {
 
 const getSupplierRoutes = async (req, res) => {
   try {
-    const loginId = await fetchLoginID();
+     // const loginId = await fetchLoginID();
     const suppliers = ["ezy"]; // Hardcoded suppliers
     const builder = new Builder({ headless: true });
 
