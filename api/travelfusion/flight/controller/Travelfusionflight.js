@@ -4,7 +4,7 @@ const axios = require("axios");
 const { Builder } = require("xml2js");
 const { parseStringPromise } = require("xml2js");
 // const { fetchLoginID } = require("../../Loginidgenerator"); // Import the login function
-
+const cache = require("../../../utils/Cache");
 const travelFusionUrl = process.env.TRAVEL_FUSION_API_URL;
 const loginId = process.env.XML_LOGIN_ID;
 const getBranchSupplierList = async (req, res) => {
@@ -932,10 +932,14 @@ const getCurrencyList = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 const getAirports = async (req, res) => {
   try {
-     // const loginId = await fetchLoginID();
-
+    // const loginId = await fetchLoginID();
+    const cachedData = cache.get("airportData");
+    if (cachedData) {
+      return res.status(201).json({ Airportdata: cachedData });
+    }
     const builder = new Builder({ headless: true });
 
     const currencyObj = {
@@ -971,6 +975,7 @@ const getAirports = async (req, res) => {
         Countryname: airport.Country?.[0]?.CountryName?.[0] || null,
       };
     });
+    cache.set("airportData", simplifiedAirports);
     res.status(200).json({
       Airportdata: simplifiedAirports,
     });
@@ -1036,8 +1041,6 @@ const getSupplierRoutes = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
-
 
 module.exports = {
   startRouting,
