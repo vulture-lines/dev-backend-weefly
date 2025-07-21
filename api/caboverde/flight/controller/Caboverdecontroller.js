@@ -9,47 +9,74 @@ const getAvailability = async (req, res) => {
 
   const builder = new Builder({ headless: true });
 
-const xmlPayload = builder.buildObject({
-  "soapenv:Envelope": {
-    $: {
-      "xmlns:soapenv": "http://schemas.xmlsoap.org/soap/envelope/",
-      "xmlns:impl": "http://impl.soap.ws.crane.hititcs.com/",
-    },
-    "soapenv:Header": {},
-    "soapenv:Body": {
-      "impl:GetAvailability": {
-        AirAvailabilityRequest: {
-          clientInformation: {
-            clientIP: req.headers["x-forwarded-for"] || req.connection.remoteAddress,
-            member: false,
-            password: password,
-            userName: username,
-            preferredCurrency: "CVE",
-          },
-          originDestinationInformationList: {
-            dateOffset: 0,
-        departureDateTime: "2025-07-16", 
-            destinationLocation: { locationCode: "BVR" },
-            originLocation: { locationCode: "RAI" },
-            flexibleFaresOnly: false,
-            includeInterlineFlights: true,
-            openFlight: true,
-          },
-          travelerInformation: {
-            passengerTypeQuantityList: {
-              hasStrecher: "",
-              passengerType: { code: "ADLT" },
-              quantity: 1,
-            },
-          },
-          tripType: "ONE_WAY",
-        },
+  const {
+    tripType,
+    preferredCurrency,
+    passengers,
+    segments = [
+      {
+        departureDateTime,
+        originLocationCode,
+        destinationLocationCode,
+        dateOffset: 0,
+        includeInterlineFlights: true,
+        openFlight: true,
+        flexibleFaresOnly: false,
       },
-      "impl:GetAirAvailability": "", // optional if needed
-    },
-  },
-});
+    ],
+    xmllog,
+  } = req.body;
 
+  // Build originDestinationInformationList dynamically
+  const originDestinationInformationList = segments.map((seg) => ({
+    dateOffset: seg.dateOffset || 0,
+    departureDateTime: seg.departureDateTime,
+    destinationLocation: { locationCode: seg.destinationLocationCode },
+    flexibleFaresOnly: seg.flexibleFaresOnly || false,
+    includeInterlineFlights: seg.includeInterlineFlights || false,
+    originLocation: { locationCode: seg.originLocationCode },
+    openFlight: seg.openFlight || false,
+  }));
+
+  // Build passenger list
+  const passengerTypeQuantityList = passengers.map((pax) => ({
+    hasStrecher: "",
+    passengerType: { code: pax.code },
+    quantity: pax.quantity,
+  }));
+
+  const xmlPayload = builder.buildObject({
+    "soapenv:Envelope": {
+      $: {
+        "xmlns:soapenv": "http://schemas.xmlsoap.org/soap/envelope/",
+        "xmlns:impl": "http://impl.soap.ws.crane.hititcs.com/",
+      },
+      "soapenv:Header": {},
+      "soapenv:Body": {
+        "impl:GetAvailability": {
+          AirAvailabilityRequest: {
+            clientInformation: {
+              clientIP: (
+                req.ip ||
+                req.connection.remoteAddress ||
+                "unknown"
+              ).replace(/^::ffff:/, ""),
+              member: false,
+              password: password,
+              userName: username,
+              preferredCurrency: preferredCurrency,
+            },
+            originDestinationInformationList,
+            travelerInformation: {
+              passengerTypeQuantityList,
+            },
+            tripType,
+          },
+        },
+        "impl:GetAirAvailability": "",
+      },
+    },
+  });
 
   try {
     const response = await axios.post(
@@ -58,21 +85,26 @@ const xmlPayload = builder.buildObject({
       {
         headers: {
           "Content-Type": "text/xml;charset=UTF-8",
-          SOAPAction: "", // Usually empty for Crane, unless explicitly required
+          SOAPAction: "",
         },
         timeout: 60000,
       }
     );
-    console.log(xmlPayload)
-console.log(response.data)
- 
+    if (xmllog) {
+      return res.send(xmlPayload);
+    }
 
-    const parsed = await parseStringPromise(response.data, { explicitArray: false });
+    const parsed = await parseStringPromise(response.data, {
+      explicitArray: false,
+    });
+
+    // Return raw XML for now, you can adapt this to return parsed JSON if needed
     res.send(response.data);
   } catch (err) {
-       console.log("xm" , xmlPayload)
     console.error("Crane OTA Error:", err);
-    res.status(500).json({ error: "Failed to fetch availability", details: err.message });
+    res
+      .status(500)
+      .json({ error: "Failed to fetch availability", details: err.message });
   }
 };
 

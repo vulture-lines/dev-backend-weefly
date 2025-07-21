@@ -61,7 +61,7 @@ const startRouting = async (req, res) => {
       travelClass,
       xmllog,
       xmlreq,
-      location,
+      location="CV",
       maxChanges = 1,
       maxHops = 2,
     } = req.body;
@@ -72,8 +72,7 @@ const startRouting = async (req, res) => {
     }
     let countryCode;
     if (location) {
-      
-    } 
+    }
 
     // const loginId = await fetchLoginID();
     const builder = new Builder({ headless: true });
@@ -131,15 +130,15 @@ const startRouting = async (req, res) => {
                   Value: req.headers["user-agent"] || "unknown",
                 },
                 {
-                  Name: "REQUESTORIGIN",
+                  Name: "RequestOrigin",
                   Value:
                     req.headers["origin"] ||
                     req.headers["referer"] ||
                     "postman",
                 },
                 {
-                  Name: "POINTOFSALE",
-                  Value: countryCode|| "CV",
+                  Name: "Pointofsale",
+                  Value: countryCode || "CV",
                 },
 
                 ...(preferredLanguage
