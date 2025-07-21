@@ -61,7 +61,7 @@ const startRouting = async (req, res) => {
       travelClass,
       xmllog,
       xmlreq,
-      location="CV",
+      location = "CV",
       maxChanges = 1,
       maxHops = 2,
     } = req.body;
@@ -988,7 +988,6 @@ const getAirports = async (req, res) => {
       Airportdata: simplifiedAirports,
     });
   } catch (error) {
-    4;
     console.log(error);
     console.error("Getting Airport Code Error", error.message);
     res.status(500).json({ error: error.message });
@@ -1002,7 +1001,12 @@ const getSupplierRoutes = async (req, res) => {
     const builder = new Builder({ headless: true });
 
     const allRoutes = [];
-
+    const cachedData = cache.get("supplierData");
+    if (cachedData) {
+      return res
+        .status(200)
+        .json({ Supplierdata: cachedData, message: "fromcache" });
+    }
     for (const supplier of suppliers) {
       const routesObj = {
         CommandList: {
@@ -1042,7 +1046,7 @@ const getSupplierRoutes = async (req, res) => {
 
       allRoutes.push({ supplier, airportRoutes });
     }
-
+    cache.set("supplierData", allRoutes);
     return res.status(200).json({ suppliers: allRoutes });
   } catch (err) {
     console.error("Getting Supplier Routes Error", err.message);
