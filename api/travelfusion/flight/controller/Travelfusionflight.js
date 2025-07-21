@@ -61,7 +61,7 @@ const startRouting = async (req, res) => {
       travelClass,
       xmllog,
       xmlreq,
-      location = "CV",
+      location,
       maxChanges = 1,
       maxHops = 2,
     } = req.body;
