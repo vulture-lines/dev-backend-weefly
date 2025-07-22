@@ -5,7 +5,6 @@ const dotenv = require("dotenv");
 const { Countrycode } = require("../utils/Countrycodeconverter");
 const { Payment } = require("../models/SISSPPaymentdb");
 const { parseStringPromise } = require("xml2js");
-
 dotenv.config();
 // Test credentials and config
 const posID = process.env.POSID;
@@ -335,55 +334,17 @@ exports.Paymentresponse = async (req, res) => {
         await new Promise((resolve) => setTimeout(resolve, 10000));
 
         console.log("Checking Booking status");
-        // const checkBookingResponse = await fetch(
-        //   `${travelFusionApi}/check-booking`,
-        //   {
-        //     method: "POST",
-        //     headers: {
-        //       "Content-Type": "application/json",
-        //     },
-        //     body: JSON.stringify({ TFBookingReference }),
-        //   }
-        // );
-
-        let interval = 5000; // start with 5 seconds
-        let keepPolling = true;
-        let response
-        while (keepPolling) {
-          try {
-            response = await fetch(`${travelFusionApi}/check-booking`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ TFBookingReference }),
-            });
-
-            const data = await response.json();
-
-            console.log("Booking Status:", data.additionalInfo.Status[0]);
-
-            // Decide what to do based on status
-            if (data.additionalInfo.Status[0] === "Unconfirmed") {
-              interval = 5 * 60 * 1000; // switch to 5 minutes
-            } else if (
-              data.additionalInfo.Status[0] === "Confirmed" ||
-              data.additionalInfo.Status[0] === "Cancelled"
-            ) {
-              keepPolling = false; // stop polling
-              break;
-            }
-
-            // Wait for the next interval
-            await new Promise((resolve) => setTimeout(resolve, interval));
-          } catch (error) {
-            console.error("Polling error:", error);
-            await new Promise((resolve) => setTimeout(resolve, interval));
+        const checkBookingResponse = await fetch(
+          `${travelFusionApi}/check-booking`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ TFBookingReference }),
           }
-        }
-
-        console.log("Polling stopped.");
-        const checkBookingResult = await response.json();
+        );
+        const checkBookingResult = await checkBookingResponse.json();
         console.log("check-booking response", checkBookingResult);
         const bookingStatus = checkBookingResult.additionalInfo.Status[0];
         console.log(
@@ -401,7 +362,7 @@ exports.Paymentresponse = async (req, res) => {
         );
 
         const status = bookingStatus.toLowerCase();
-        const bookid = checkBookingResult.additionalInfo.SupplierReference[0];
+        const bookid=checkBookingResult.additionalInfo.SupplierReference[0]
         switch (status) {
           case "succeeded":
             res.status(201).redirect(`${process.env.SUCCESS_URL}/${bookid}`);
