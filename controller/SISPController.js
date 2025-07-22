@@ -363,10 +363,10 @@ exports.Paymentresponse = async (req, res) => {
         );
 
         const status = bookingStatus.toLowerCase();
-
+        const bookid=checkBookingResult.additionalInfo.SupplierReference[0]
         switch (status) {
           case "succeeded":
-            res.status(201).redirect(process.env.SUCCESS_URL);
+            res.status(201).redirect(`${process.env.SUCCESS_URL}/${bookid}`);
             break;
 
           case "failed":
