@@ -2,10 +2,7 @@ require("dotenv").config();
 const axios = require("axios");
 const { Builder } = require("xml2js");
 const { parseStringPromise } = require("xml2js");
-const {
-  transformAvailabilityToFlightList,
-  extractBookFlightSegmentList,
-} = require("../utils/Parser");
+const {buildBookFlightSegmentList,transformAvailabilityToFlightList}=require("../utils/Parser")
 
 const getAvailability = async (req, res) => {
   const username = process.env.API_USERNAME_CABOVERDE;
@@ -108,9 +105,16 @@ const getAvailability = async (req, res) => {
     }
     let bookingSegments;
     let flightList = transformAvailabilityToFlightList(parsed);
+    try {
+      bookingSegments = buildBookFlightSegmentList(parsed, 0, 0, 0);
+      // console.log(JSON.stringify(bookingSegments, null, 2));
+    } catch (error) {
+      console.log(error);
+    }
 
     res.json({
       rawResponse: parsed,
+      bookingSegment: bookingSegments,
       flightList: flightList,
     });
   } catch (err) {
@@ -125,31 +129,15 @@ const getExtraChargesAndProducts = async (req, res) => {
   const username = process.env.API_USERNAME_CABOVERDE;
   const password = process.env.API_PASSWORD_CABOVERDE;
 
-  const {
-    preferredCurrency = "CVE",
-    availabilityResponse,
-    selection,
-  } = req.body;
+  const { preferredCurrency = "CVE", bookingSegment = [] } = req.body;
 
-  if (!availabilityResponse || !selection) {
+  if (
+    !Array.isArray(bookingSegment) ||
+    bookingSegment.length === 0
+  ) {
     return res
       .status(400)
-      .json({ error: "Missing availabilityResponse or selection object" });
-  }
-
-  let bookingSegment;
-  try {
-    bookingSegment = extractBookFlightSegmentList(
-      availabilityResponse,
-      selection.routeIndexes || [0],
-      selection.optionIndex || 0,
-      selection.fareComponentIndex || 0
-    );
-  } catch (err) {
-    return res.status(500).json({
-      error: "Failed to extract booking segments",
-      details: err.message,
-    });
+      .json({ error: "Invalid or missing bookingSegment" });
   }
 
   const builder = new Builder({ headless: true });
@@ -179,6 +167,7 @@ const getExtraChargesAndProducts = async (req, res) => {
               const fi = segment.fareInfo || {};
               const bc = segment.bookingClass;
 
+              // Normalize booking class
               const normalizedBookingClass = Array.isArray(bc)
                 ? bc
                 : [
@@ -220,6 +209,7 @@ const getExtraChargesAndProducts = async (req, res) => {
   });
 
   try {
+    
     const response = await axios.post(
       "https://tcv-stage.crane.aero/craneota/CraneOTAService?wsdl",
       xmlPayload,
