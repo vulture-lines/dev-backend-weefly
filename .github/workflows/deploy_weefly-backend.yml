@@ -1,4 +1,4 @@
-name: Deploy Node.js Backend_to EC2 hosted
+name: Deploy Node.js Backend to EC2
 
 on:
   push:
@@ -19,39 +19,33 @@ jobs:
         host: ${{ secrets.EC2_IP_ADDRESS }}
         username: ${{ secrets.EC2_EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
-        envs: GITHUB_PAT
+        envs: PAT_GITHUB
         script: |
-          echo "Updating packages and installing Node.js and PM2..."
+          echo "✅ Updating packages and installing Node.js and PM2..."
           sudo apt-get update
           sudo apt-get install -y nodejs npm
           sudo npm install -g pm2
 
-          echo "Fixing directory permissions..."
+          echo "✅ Setting up project directory..."
           sudo mkdir -p /var/www/html
           sudo chown -R $USER:$USER /var/www/html
           cd /var/www/html
 
-          if [ ! -d "dev-backend-weefly" ]; then
-            echo "Cloning repository for the first time..."
-            git clone https://somas:$GITHUB_PAT@github.com/vulture-lines/dev-backend-weefly.git
+          if [ ! -d "Weefly-backend-project" ]; then
+            echo "📦 Cloning private repo..."
+            git clone https://vulture-lines:$PAT_GITHUB@github.com/vulture-lines/Weefly-backend-project.git
           fi
 
-          cd dev-backend-weefly
+          cd Weefly-backend-project
 
-          echo "Resetting local changes and pulling latest code..."
+          echo "📥 Pulling latest changes..."
           git reset --hard
           git pull origin main
 
-          echo "Installing dependencies..."
+          echo "📦 Installing dependencies..."
           npm install
 
-          echo "Checking for Server.js file..."
-          if [ ! -f Server.js ]; then
-            echo "❌ ERROR: Server.js not found. Please check your project entry point."
-            exit 1
-          fi
-
-          echo "Starting or restarting PM2 process..."
+          echo "🚀 Starting PM2..."
           pm2 describe weefly-backend > /dev/null
           if [ $? -ne 0 ]; then
             pm2 start Server.js --name weefly-backend
