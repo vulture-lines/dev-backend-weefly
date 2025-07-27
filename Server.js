@@ -1,6 +1,7 @@
 const dotenv = require("dotenv");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const axios = require('axios');
 const express = require("express");
 const bodyParser = require("body-parser");
 const flightsRoute = require("./routes/Amadeusroutes");
@@ -32,5 +33,7 @@ app.use("/hotelapi", travelFusionHotelRoute);
 app.use("/transactionapi",sisproutes);
 app.use("/transactionapi",commissionRoutes);
 connectDb();
+
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

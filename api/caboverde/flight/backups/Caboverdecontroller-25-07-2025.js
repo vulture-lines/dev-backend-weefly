@@ -2,7 +2,10 @@ require("dotenv").config();
 const axios = require("axios");
 const { Builder } = require("xml2js");
 const { parseStringPromise } = require("xml2js");
-const { extractBookFlightSegmentList } = require("../utils/Parser");
+const {
+  transformAvailabilityToFlightList,
+  extractBookFlightSegmentList,
+} = require("../utils/Parser");
 
 const getAvailability = async (req, res) => {
   const username = process.env.API_USERNAME_CABOVERDE;
@@ -103,8 +106,12 @@ const getAvailability = async (req, res) => {
       // Return raw XML for now, you can adapt this to return parsed JSON if needed
       return res.send(response.data);
     }
+    let bookingSegments;
+    let flightList = transformAvailabilityToFlightList(parsed);
+
     res.json({
       rawResponse: parsed,
+      flightList: flightList,
     });
   } catch (err) {
     console.error("Crane OTA Error:", err);
@@ -118,26 +125,35 @@ const getExtraChargesAndProducts = async (req, res) => {
   const username = process.env.API_USERNAME_CABOVERDE;
   const password = process.env.API_PASSWORD_CABOVERDE;
 
-  const builder = new Builder({ headless: true });
-
   const {
-    preferredCurrency,
-    tripType,
-    journeyStartLocationCode,
-    passengers,
-    bookFlightSegmentList,
-    xmllog,
-    xmlreq,
+    preferredCurrency = "CVE",
+    availabilityResponse,
+    selection,
   } = req.body;
 
-  // Build passenger list
-  const passengerTypeQuantityList = passengers.map((pax) => ({
-    hasStrecher: "",
-    passengerType: { code: pax.code },
-    quantity: pax.quantity,
-  }));
+  if (!availabilityResponse || !selection) {
+    return res
+      .status(400)
+      .json({ error: "Missing availabilityResponse or selection object" });
+  }
 
-  // Build full XML payload
+  let bookingSegment;
+  try {
+    bookingSegment = extractBookFlightSegmentList(
+      availabilityResponse,
+      selection.routeIndexes || [0],
+      selection.optionIndex || 0,
+      selection.fareComponentIndex || 0
+    );
+  } catch (err) {
+    return res.status(500).json({
+      error: "Failed to extract booking segments",
+      details: err.message,
+    });
+  }
+
+  const builder = new Builder({ headless: true });
+
   const xmlPayload = builder.buildObject({
     "soapenv:Envelope": {
       $: {
@@ -149,24 +165,54 @@ const getExtraChargesAndProducts = async (req, res) => {
         "impl:GetAirExtraChargesAndProducts": {
           AirExtraChargesAndProductsRequest: {
             clientInformation: {
+              userName: username,
+              password: password,
               clientIP: (
                 req.ip ||
                 req.connection.remoteAddress ||
                 "unknown"
               ).replace(/^::ffff:/, ""),
-              member: false,
-              password: password,
-              userName: username,
-              preferredCurrency: preferredCurrency,
+              preferredCurrency,
             },
-            bookFlightSegmentList,
-            journeyStartLocation: {
-              locationCode: journeyStartLocationCode,
-            },
-            travelerInformation: {
-              passengerTypeQuantityList,
-            },
-            tripType,
+            bookingSegment: bookingSegment.map((segment) => {
+              const fs = segment.flightSegment || {};
+              const fi = segment.fareInfo || {};
+              const bc = segment.bookingClass;
+
+              const normalizedBookingClass = Array.isArray(bc)
+                ? bc
+                : [
+                    {
+                      resBookDesigCode: fi.resBookDesigCode || "Y",
+                      resBookDesigQuantity:
+                        bc?.resBookDesigQuantity?.[0] || "1",
+                    },
+                  ];
+
+              return {
+                flightSegment: {
+                  flightSegmentID: fs.flightSegmentID,
+                  flightNumber: fs.flightNumber,
+                  airlineCode: fs.airline?.code,
+                  departureAirportCode: fs.departureAirport?.locationCode,
+                  arrivalAirportCode: fs.arrivalAirport?.locationCode,
+                  departureDateTime: fs.departureDateTime,
+                  arrivalDateTime: fs.arrivalDateTime,
+                },
+                fareInfo: {
+                  cabin: fi.cabin,
+                  fareReferenceCode: fi.fareReferenceCode,
+                  fareReferenceID: fi.fareReferenceID,
+                  fareReferenceName: fi.fareReferenceName,
+                  resBookDesigCode: fi.resBookDesigCode,
+                  flightSegmentSequence: fi.flightSegmentSequence,
+                },
+                bookingClass: normalizedBookingClass.map((b) => ({
+                  resBookDesigCode: b.resBookDesigCode || "Y",
+                  resBookDesigQuantity: b.resBookDesigQuantity || "1",
+                })),
+              };
+            }),
           },
         },
       },
@@ -186,134 +232,19 @@ const getExtraChargesAndProducts = async (req, res) => {
       }
     );
 
-    if (xmllog && xmlreq) {
-      return res.send(xmlPayload);
-    }
-
     const parsed = await parseStringPromise(response.data, {
       explicitArray: false,
     });
 
-    if (xmllog) {
-      return res.send(response.data);
-    }
-
     res.json({
-      rawResponse: parsed,
+      rawXml: response.data,
+      parsed,
     });
-  } catch (err) {
-    console.error("Crane OTA Error:", err);
-    res
-      .status(500)
-      .json({ error: "Failed to fetch extra charges", details: err.message });
-  }
-};
-
-const createBooking = async (req, res) => {
-  const username = process.env.API_USERNAME_CABOVERDE;
-  const password = process.env.API_PASSWORD_CABOVERDE;
-
-  const builder = new Builder({ headless: true });
-
-  const {
-    preferredCurrency,
-    tripType,
-    airTravelerList,
-    bookFlightSegmentList,
-    specialRequestDetails = [],
-    xmllog,
-    xmlreq,
-  } = req.body;
-
-  // Convert SSRs to XML-friendly format
-  const specialServiceRequestList = specialRequestDetails.map((ssr) => ({
-    airTravelerSequence: 1,
-    flightSegmentSequence: 0,
-    paymentStatus: "FR",
-    SSR: {
-      allowedQuantityPerPassenger: 1,
-      code: ssr.code,
-      explanation: ssr.explanation,
-      groupCode: "OTH",
-      groupCodeExplanation: "OTH",
-      free: true,
-      refundable: false,
-      exchangeable: false,
-      bundleRelatedSsr: false,
-      ssrReasonCode: "USER_SELECTION",
-      unitOfMeasureExist: false,
-      extraBaggage: false,
-      iciAllowed: false,
-      showOnItinerary: false
-    },
-    serviceQuantity: 1,
-    status: "HK",
-    ticketed: false
-  }));
-
-  const envelope = {
-    "soapenv:Envelope": {
-      $: {
-        "xmlns:soapenv": "http://schemas.xmlsoap.org/soap/envelope/",
-        "xmlns:impl": "http://impl.soap.ws.crane.hititcs.com/"
-      },
-      "soapenv:Header": {},
-      "soapenv:Body": {
-        "impl:CreateBooking": {
-          AirBookingRequest: {
-            clientInformation: {
-              clientIP: (
-                req.ip ||
-                req.connection.remoteAddress ||
-                "unknown"
-              ).replace(/^::ffff:/, ""),
-              member: false,
-              password: password,
-              userName: username,
-              preferredCurrency: preferredCurrency,
-            },
-            tripType,
-            airTravelerList,
-            bookFlightSegmentList,
-            specialRequestDetails: {
-              specialServiceRequestList
-            }
-          }
-        }
-      }
-    }
-  };
-
-  const xmlPayload = builder.buildObject(envelope);
-
-  try {
-    const response = await axios.post(
-      "https://tcv-stage.crane.aero/craneota/CraneOTAService?wsdl",
-      xmlPayload,
-      {
-        headers: {
-          "Content-Type": "text/xml;charset=UTF-8",
-          SOAPAction: ""
-        },
-        timeout: 60000
-      }
-    );
-
-    if (xmllog && xmlreq) return res.send(xmlPayload);
-    if (xmllog) return res.send(response.data);
-
-    const parsed = await parseStringPromise(response.data, {
-      explicitArray: false
-    });
-
-    res.json({
-      rawResponse: parsed
-    });
-  } catch (err) {
-    console.error("Create Booking Error:", err.message);
+  } catch (error) {
+    console.error("GetAirExtraChargesAndProducts Error:", error);
     res.status(500).json({
-      error: "Failed to create booking",
-      details: err.message
+      error: "Failed to get extra charges and products",
+      details: error.message,
     });
   }
 };
@@ -321,5 +252,4 @@ const createBooking = async (req, res) => {
 module.exports = {
   getAvailability,
   getExtraChargesAndProducts,
-  createBooking
 };
