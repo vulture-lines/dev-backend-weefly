@@ -369,194 +369,6 @@ const processDetails = async (req, res) => {
   }
 };
 
-// const processTerms = async (req, res) => {
-//   try {
-//     const {
-//       mode = "plane",
-//       routingId,
-//       bookingProfile,
-//       seatOptions = [],
-//       luggageOptions = [],
-//       outwardLuggageOptions = [],
-//       returnLuggageOptions = [],
-//       outwardId,
-//       returnId = null,
-//       countryOfUser,
-//       xmlreq,
-//       xmllog,
-//     } = req.body;
-
-//     if (!routingId || !bookingProfile) {
-//       return res.status(422).json({
-//         error: "routingId and bookingProfile are required",
-//       });
-//     }
-
-//     // const loginId = await fetchLoginID();
-
-//     const {
-//       ContactDetails: {
-//         Email,
-//         MobilePhone,
-//         Name: { Title, NamePartList },
-//       } = {},
-//     } = bookingProfile;
-
-//     const phone = MobilePhone
-//       ? `${MobilePhone.InternationalCode || ""}${MobilePhone.AreaCode || ""}${
-//           MobilePhone.Number || ""
-//         }`
-//       : "";
-
-//     const nameParts = Array.isArray(NamePartList?.NamePart)
-//       ? NamePartList.NamePart.join(" ")
-//       : "";
-//     const fullName = `${Title || ""} ${nameParts}`.trim();
-//     const userData = `${Email || ""}, ${phone || ""}, ${fullName}`;
-
-//     // Handle travellers
-//     let travellers = bookingProfile.TravellerList?.Traveller || [];
-//     if (!Array.isArray(travellers)) {
-//       travellers = [travellers];
-//     }
-
-//     travellers = travellers.map((traveller, index) => {
-//       const seat = seatOptions[index] || "";
-//       const outwardLuggage = outwardLuggageOptions[index] || "";
-//       const returnLuggage = returnLuggageOptions[index] || "";
-//       const luggage = luggageOptions[index] || "";
-
-//       let csps =
-//         traveller.CustomSupplierParameterList?.CustomSupplierParameter || [];
-
-//       if (!Array.isArray(csps)) {
-//         csps = [csps];
-//       }
-
-//       if (seat) {
-//         csps.push({ Name: "SeatOptions", Value: `${seat};` });
-//       }
-
-//       if (luggage) {
-//         csps.push({ Name: "LuggageOptions", Value: luggage });
-//       } else {
-//         if (outwardLuggage) {
-//           csps.push({ Name: "OutwardLuggageOptions", Value: outwardLuggage });
-//         }
-//         if (returnLuggage) {
-//           csps.push({ Name: "ReturnLuggageOptions", Value: returnLuggage });
-//         }
-//       }
-
-//       return {
-//         ...traveller,
-//         CustomSupplierParameterList: {
-//           CustomSupplierParameter: csps,
-//         },
-//       };
-//     });
-
-//     // Build global CSPs
-//     const globalCSPs = [
-//       {
-//         Name: "EndUserDeviceMACAddress",
-//         Value: req.headers["x-edusermacaddress"] || "not-mac",
-//       },
-//       {
-//         Name: "EndUserIPAddress",
-//         Value: (req.ip || req.connection?.remoteAddress || "unknown").replace(
-//           /^::ffff:/,
-//           ""
-//         ),
-//       },
-//       {
-//         Name: "EndUserBrowserAgent",
-//         Value: req.headers["user-agent"] || "unknown",
-//       },
-//       {
-//         Name: "RequestOrigin",
-//         Value: req.headers["origin"] || req.headers["referer"] || "postman",
-//       },
-//       { Name: "UserData", Value: userData },
-//     ];
-
-//     if (countryOfUser) {
-//       globalCSPs.push({
-//         Name: "CountryOfTheUser",
-//         Value: countryOfUser,
-//       });
-//     }
-
-//     // ✅ Rebuild bookingProfileObj with CSPs first
-//     const bookingProfileObj = {
-//       CustomSupplierParameterList: {
-//         CustomSupplierParameter: globalCSPs,
-//       },
-//       TravellerList: {
-//         Traveller: travellers,
-//       },
-//       ContactDetails: bookingProfile.ContactDetails,
-//       BillingDetails: bookingProfile.BillingDetails,
-//       // Add more fields here if necessary
-//     };
-
-//     // Final ProcessTerms object
-//     const processTermsObj = {
-//       XmlLoginId: loginId,
-//       LoginId: loginId,
-//       Mode: mode,
-//       RoutingId: routingId,
-//       OutwardId: outwardId,
-//       ...(returnId ? { ReturnId: returnId } : {}),
-//       BookingProfile: bookingProfileObj,
-//     };
-
-//     const requestObj = {
-//       CommandList: {
-//         ProcessTerms: processTermsObj,
-//       },
-//     };
-
-//     // Convert to XML
-//     const builder = new Builder({ headless: true });
-//     const xml = builder.buildObject(requestObj);
-
-//     // Send XML to TravelFusion
-//     const response = await axios.post(travelFusionUrl, xml, {
-//       headers: {
-//         "Content-Type": "text/xml; charset=utf-8",
-//         Accept: "text/xml",
-//         "Accept-Encoding": "gzip, deflate",
-//       },
-//       timeout: 150000,
-//     });
-
-//     // Logging/Return options
-//     if (xmllog === "yes" && xmlreq === "yes") {
-//       return res.status(200).send(xml);
-//     } else if (xmllog === "yes") {
-//       return res.status(200).send(response.data);
-//     }
-
-//     const parsed = await parseStringPromise(response.data);
-//     const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
-
-//     if (termsResponse && Object.keys(termsResponse).length > 0) {
-//       res.status(200).json({ data: termsResponse });
-//     } else {
-//       const error =
-//         parsed?.CommandList?.CommandExecutionFailure?.[0]?.ProcessTerms?.[0]?.$;
-//       if (error?.ecode === "2-2460") {
-//         console.warn("Retrying due to invalid seat options...");
-//       }
-//     }
-//   } catch (err) {
-//     console.error("ProcessTerms Error:", err.message);
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-
 const processTerms = async (req, res) => {
   try {
     const {
@@ -580,7 +392,7 @@ const processTerms = async (req, res) => {
       });
     }
 
-    // const loginId = "mocked-login-id"; // Replace with fetchLoginID() logic if needed
+    // const loginId = await fetchLoginID();
 
     const {
       ContactDetails: {
@@ -591,7 +403,9 @@ const processTerms = async (req, res) => {
     } = bookingProfile;
 
     const phone = MobilePhone
-      ? `${MobilePhone.InternationalCode || ""}${MobilePhone.AreaCode || ""}${MobilePhone.Number || ""}`
+      ? `${MobilePhone.InternationalCode || ""}${MobilePhone.AreaCode || ""}${
+          MobilePhone.Number || ""
+        }`
       : "";
 
     const nameParts = Array.isArray(NamePartList?.NamePart)
@@ -600,165 +414,143 @@ const processTerms = async (req, res) => {
     const fullName = `${Title || ""} ${nameParts}`.trim();
     const userData = `${Email || ""}, ${phone || ""}, ${fullName}`;
 
-    const buildTravellers = (semicolonsCount = 1) => {
-      let travellers = bookingProfile.TravellerList?.Traveller || [];
-      if (!Array.isArray(travellers)) {
-        travellers = [travellers];
+    // Handle travellers
+    let travellers = bookingProfile.TravellerList?.Traveller || [];
+    if (!Array.isArray(travellers)) {
+      travellers = [travellers];
+    }
+
+    travellers = travellers.map((traveller, index) => {
+      const seat = seatOptions[index] || "";
+      const outwardLuggage = outwardLuggageOptions[index] || "";
+      const returnLuggage = returnLuggageOptions[index] || "";
+      const luggage = luggageOptions[index] || "";
+
+      let csps =
+        traveller.CustomSupplierParameterList?.CustomSupplierParameter || [];
+
+      if (!Array.isArray(csps)) {
+        csps = [csps];
       }
 
-      return travellers.map((traveller, index) => {
-        const seat = seatOptions[index] || "";
-        const outwardLuggage = outwardLuggageOptions[index] || "";
-        const returnLuggage = returnLuggageOptions[index] || "";
-        const luggage = luggageOptions[index] || "";
+      if (seat) {
+        csps.push({ Name: "SeatOptions", Value: `${seat};` });
+      }
 
-        let csps = traveller.CustomSupplierParameterList?.CustomSupplierParameter || [];
-        if (!Array.isArray(csps)) {
-          csps = [csps];
+      if (luggage) {
+        csps.push({ Name: "LuggageOptions", Value: luggage });
+      } else {
+        if (outwardLuggage) {
+          csps.push({ Name: "OutwardLuggageOptions", Value: outwardLuggage });
         }
-
-        if (seat) {
-          csps.push({
-            Name: "SeatOptions",
-            Value: `${seat}${";".repeat(semicolonsCount)}`, // Always append semicolons
-          });
+        if (returnLuggage) {
+          csps.push({ Name: "ReturnLuggageOptions", Value: returnLuggage });
         }
+      }
 
-        if (luggage) {
-          csps.push({ Name: "LuggageOptions", Value: luggage });
-        } else {
-          if (outwardLuggage) {
-            csps.push({ Name: "OutwardLuggageOptions", Value: outwardLuggage });
-          }
-          if (returnLuggage) {
-            csps.push({ Name: "ReturnLuggageOptions", Value: returnLuggage });
-          }
-        }
+      return {
+        ...traveller,
+        CustomSupplierParameterList: {
+          CustomSupplierParameter: csps,
+        },
+      };
+    });
 
-        return {
-          ...traveller,
-          CustomSupplierParameterList: {
-            CustomSupplierParameter: csps,
-          },
-        };
+    // Build global CSPs
+    const globalCSPs = [
+      {
+        Name: "EndUserDeviceMACAddress",
+        Value: req.headers["x-edusermacaddress"] || "not-mac",
+      },
+      {
+        Name: "EndUserIPAddress",
+        Value: (req.ip || req.connection?.remoteAddress || "unknown").replace(
+          /^::ffff:/,
+          ""
+        ),
+      },
+      {
+        Name: "EndUserBrowserAgent",
+        Value: req.headers["user-agent"] || "unknown",
+      },
+      {
+        Name: "RequestOrigin",
+        Value: req.headers["origin"] || req.headers["referer"] || "postman",
+      },
+      { Name: "UserData", Value: userData },
+    ];
+
+    if (countryOfUser) {
+      globalCSPs.push({
+        Name: "CountryOfTheUser",
+        Value: countryOfUser,
       });
-    };
+    }
 
-    const buildBookingProfileObj = (travellers) => ({
+    // ✅ Rebuild bookingProfileObj with CSPs first
+    const bookingProfileObj = {
       CustomSupplierParameterList: {
-        CustomSupplierParameter: [
-          {
-            Name: "EndUserDeviceMACAddress",
-            Value: req.headers["x-edusermacaddress"] || "not-mac",
-          },
-          {
-            Name: "EndUserIPAddress",
-            Value: (req.ip || req.connection?.remoteAddress || "unknown").replace(/^::ffff:/, ""),
-          },
-          {
-            Name: "EndUserBrowserAgent",
-            Value: req.headers["user-agent"] || "unknown",
-          },
-          {
-            Name: "RequestOrigin",
-            Value: req.headers["origin"] || req.headers["referer"] || "postman",
-          },
-          { Name: "UserData", Value: userData },
-          ...(countryOfUser
-            ? [{ Name: "CountryOfTheUser", Value: countryOfUser }]
-            : []),
-        ],
+        CustomSupplierParameter: globalCSPs,
       },
       TravellerList: {
         Traveller: travellers,
       },
       ContactDetails: bookingProfile.ContactDetails,
       BillingDetails: bookingProfile.BillingDetails,
-    });
-
-    const sendXmlRequest = async (travellers) => {
-      const builder = new Builder({ headless: true });
-
-      const processTermsObj = {
-        XmlLoginId: loginId,
-        LoginId: loginId,
-        Mode: mode,
-        RoutingId: routingId,
-        OutwardId: outwardId,
-        ...(returnId ? { ReturnId: returnId } : {}),
-        BookingProfile: buildBookingProfileObj(travellers),
-      };
-
-      const requestObj = {
-        CommandList: {
-          ProcessTerms: processTermsObj,
-        },
-      };
-
-      const xml = builder.buildObject(requestObj);
-
-      const response = await axios.post(travelFusionUrl, xml, {
-        headers: {
-          "Content-Type": "text/xml; charset=utf-8",
-          Accept: "text/xml",
-          "Accept-Encoding": "gzip, deflate",
-        },
-        timeout: 150000,
-      });
-
-      return { response, xml };
+      // Add more fields here if necessary
     };
 
-    // Retry loop for seat option error
-    let parsed, response, xml, termsResponse;
-    let semicolons = 1;
-    const MAX_RETRIES = 5;
-    let lastError = null;
+    // Final ProcessTerms object
+    const processTermsObj = {
+      XmlLoginId: loginId,
+      LoginId: loginId,
+      Mode: mode,
+      RoutingId: routingId,
+      OutwardId: outwardId,
+      ...(returnId ? { ReturnId: returnId } : {}),
+      BookingProfile: bookingProfileObj,
+    };
 
-    while (semicolons <= MAX_RETRIES) {
-      const travellers = buildTravellers(semicolons);
-      ({ response, xml } = await sendXmlRequest(travellers));
+    const requestObj = {
+      CommandList: {
+        ProcessTerms: processTermsObj,
+      },
+    };
 
-      parsed = await parseStringPromise(response.data);
-      termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
+    // Convert to XML
+    const builder = new Builder({ headless: true });
+    const xml = builder.buildObject(requestObj);
 
-      if (termsResponse && Object.keys(termsResponse).length > 0) {
-        break; // ✅ Success
-      }
+    // Send XML to TravelFusion
+    const response = await axios.post(travelFusionUrl, xml, {
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        Accept: "text/xml",
+        "Accept-Encoding": "gzip, deflate",
+      },
+      timeout: 150000,
+    });
 
-      const error =
-        parsed?.CommandList?.CommandExecutionFailure?.[0]?.ProcessTerms?.[0]?.$;
-
-      lastError = error;
-
-      if (error?.ecode === "2-2460") {
-        console.warn(`Retrying due to seat option error (ecode 2-2460). Attempt ${semicolons}`);
-        semicolons++;
-      } 
+    // Logging/Return options
+    if (xmllog === "yes" && xmlreq === "yes") {
+      return res.status(200).send(xml);
+    } else if (xmllog === "yes") {
+      return res.status(200).send(response.data);
     }
 
-    // Response
+    const parsed = await parseStringPromise(response.data);
+    const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
+
     if (termsResponse && Object.keys(termsResponse).length > 0) {
-      if (xmllog === "yes" && xmlreq === "yes") {
-        return res.status(200).send(xml);
-      } else if (xmllog === "yes") {
-        return res.status(200).send(response.data);
-      } else {
-        return res.status(200).json({ data: termsResponse });
-      }
+      res.status(200).json({ data: termsResponse });
     } else {
-      return res.status(500).json({
-        error: lastError || { ecode: "unknown", etext: "Unknown failure" },
-      });
+      res.status(200).send(response.data);
     }
   } catch (err) {
     console.error("ProcessTerms Error:", err.message);
     res.status(500).json({ error: err.message });
   }
 };
-
-
-
 
 const startBooking = async (req, res) => {
   try {
