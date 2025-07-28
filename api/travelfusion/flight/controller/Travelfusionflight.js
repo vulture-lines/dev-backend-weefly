@@ -544,6 +544,12 @@ const processTerms = async (req, res) => {
     if (termsResponse && Object.keys(termsResponse).length > 0) {
       res.status(200).json({ data: termsResponse });
     } else {
+      let parsed = await parseStringPromise(response.data);
+      const error =
+        parsed?.CommandList?.CommandExecutionFailure?.[0]?.ProcessTerms?.[0]?.$;
+      if (error?.ecode === "2-2460") {
+        return res.status(422).json({error:error})
+      }
       res.status(200).send(response.data);
     }
   } catch (err) {
