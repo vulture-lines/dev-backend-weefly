@@ -734,10 +734,7 @@ const processTerms = async (req, res) => {
       if (error?.ecode === "2-2460") {
         console.warn(`Retrying due to seat option error (ecode 2-2460). Attempt ${semicolons}`);
         semicolons++;
-      } else {
-        // Any other error — stop retrying
-        break;
-      }
+      } 
     }
 
     // Response
