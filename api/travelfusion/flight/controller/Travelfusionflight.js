@@ -556,6 +556,7 @@ const processDetails = async (req, res) => {
 //   }
 // };
 
+
 const processTerms = async (req, res) => {
   try {
     const {
@@ -579,7 +580,7 @@ const processTerms = async (req, res) => {
       });
     }
 
-
+    // const loginId = "mocked-login-id"; // Replace with fetchLoginID() logic if needed
 
     const {
       ContactDetails: {
@@ -617,7 +618,10 @@ const processTerms = async (req, res) => {
         }
 
         if (seat) {
-          csps.push({ Name: "SeatOptions", Value: `${seat}${";".repeat(semicolonsCount)}` });
+          csps.push({
+            Name: "SeatOptions",
+            Value: `${seat}${";".repeat(semicolonsCount)}`, // Always append semicolons
+          });
         }
 
         if (luggage) {
@@ -705,9 +709,11 @@ const processTerms = async (req, res) => {
       return { response, xml };
     };
 
+    // Retry loop for seat option error
     let parsed, response, xml, termsResponse;
     let semicolons = 1;
     const MAX_RETRIES = 5;
+    let lastError = null;
 
     while (semicolons <= MAX_RETRIES) {
       const travellers = buildTravellers(semicolons);
@@ -716,22 +722,25 @@ const processTerms = async (req, res) => {
       parsed = await parseStringPromise(response.data);
       termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
 
-      // If response is valid, break the retry loop
       if (termsResponse && Object.keys(termsResponse).length > 0) {
-        break;
+        break; // ✅ Success
       }
 
-      const error = parsed?.CommandList?.CommandExecutionFailure?.[0]?.ProcessTerms?.[0]?.$;
+      const error =
+        parsed?.CommandList?.CommandExecutionFailure?.[0]?.ProcessTerms?.[0]?.$;
+
+      lastError = error;
+
       if (error?.ecode === "2-2460") {
         console.warn(`Retrying due to seat option error (ecode 2-2460). Attempt ${semicolons}`);
         semicolons++;
       } else {
-        // Some other error - stop retrying
+        // Any other error — stop retrying
         break;
       }
     }
 
-    // Final response
+    // Response
     if (termsResponse && Object.keys(termsResponse).length > 0) {
       if (xmllog === "yes" && xmlreq === "yes") {
         return res.status(200).send(xml);
@@ -741,10 +750,8 @@ const processTerms = async (req, res) => {
         return res.status(200).json({ data: termsResponse });
       }
     } else {
-      const fallbackError =
-        parsed?.CommandList?.CommandExecutionFailure?.[0]?.ProcessTerms?.[0]?.$;
       return res.status(500).json({
-        error: fallbackError || "Unknown failure after retries",
+        error: lastError || { ecode: "unknown", etext: "Unknown failure" },
       });
     }
   } catch (err) {
@@ -752,6 +759,8 @@ const processTerms = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+
 
 
 const startBooking = async (req, res) => {
