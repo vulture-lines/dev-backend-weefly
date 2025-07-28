@@ -576,7 +576,7 @@ const processTerms = async (req, res) => {
     }
 
     // const loginId = await fetchLoginID();
-    const loginId = "sample-login-id"; // Replace with actual login ID logic
+
 
     const {
       ContactDetails: {
