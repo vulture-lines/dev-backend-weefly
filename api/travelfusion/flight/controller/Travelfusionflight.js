@@ -369,6 +369,189 @@ const processDetails = async (req, res) => {
   }
 };
 
+// const processTerms = async (req, res) => {
+//   try {
+//     const {
+//       mode = "plane",
+//       routingId,
+//       bookingProfile,
+//       seatOptions = [],
+//       luggageOptions = [],
+//       outwardLuggageOptions = [],
+//       returnLuggageOptions = [],
+//       outwardId,
+//       returnId = null,
+//       countryOfUser,
+//       xmlreq,
+//       xmllog,
+//     } = req.body;
+
+//     if (!routingId || !bookingProfile) {
+//       return res.status(422).json({
+//         error: "routingId and bookingProfile are required",
+//       });
+//     }
+
+//     // const loginId = await fetchLoginID();
+
+//     const {
+//       ContactDetails: {
+//         Email,
+//         MobilePhone,
+//         Name: { Title, NamePartList },
+//       } = {},
+//     } = bookingProfile;
+
+//     const phone = MobilePhone
+//       ? `${MobilePhone.InternationalCode || ""}${MobilePhone.AreaCode || ""}${
+//           MobilePhone.Number || ""
+//         }`
+//       : "";
+
+//     const nameParts = Array.isArray(NamePartList?.NamePart)
+//       ? NamePartList.NamePart.join(" ")
+//       : "";
+//     const fullName = `${Title || ""} ${nameParts}`.trim();
+//     const userData = `${Email || ""}, ${phone || ""}, ${fullName}`;
+
+//     // Handle travellers
+//     let travellers = bookingProfile.TravellerList?.Traveller || [];
+//     if (!Array.isArray(travellers)) {
+//       travellers = [travellers];
+//     }
+
+//     travellers = travellers.map((traveller, index) => {
+//       const seat = seatOptions[index] || "";
+//       const outwardLuggage = outwardLuggageOptions[index] || "";
+//       const returnLuggage = returnLuggageOptions[index] || "";
+//       const luggage = luggageOptions[index] || "";
+
+//       let csps =
+//         traveller.CustomSupplierParameterList?.CustomSupplierParameter || [];
+
+//       if (!Array.isArray(csps)) {
+//         csps = [csps];
+//       }
+
+//       if (seat) {
+//         csps.push({ Name: "SeatOptions", Value: `${seat};` });
+//       }
+
+//       if (luggage) {
+//         csps.push({ Name: "LuggageOptions", Value: luggage });
+//       } else {
+//         if (outwardLuggage) {
+//           csps.push({ Name: "OutwardLuggageOptions", Value: outwardLuggage });
+//         }
+//         if (returnLuggage) {
+//           csps.push({ Name: "ReturnLuggageOptions", Value: returnLuggage });
+//         }
+//       }
+
+//       return {
+//         ...traveller,
+//         CustomSupplierParameterList: {
+//           CustomSupplierParameter: csps,
+//         },
+//       };
+//     });
+
+//     // Build global CSPs
+//     const globalCSPs = [
+//       {
+//         Name: "EndUserDeviceMACAddress",
+//         Value: req.headers["x-edusermacaddress"] || "not-mac",
+//       },
+//       {
+//         Name: "EndUserIPAddress",
+//         Value: (req.ip || req.connection?.remoteAddress || "unknown").replace(
+//           /^::ffff:/,
+//           ""
+//         ),
+//       },
+//       {
+//         Name: "EndUserBrowserAgent",
+//         Value: req.headers["user-agent"] || "unknown",
+//       },
+//       {
+//         Name: "RequestOrigin",
+//         Value: req.headers["origin"] || req.headers["referer"] || "postman",
+//       },
+//       { Name: "UserData", Value: userData },
+//     ];
+
+//     if (countryOfUser) {
+//       globalCSPs.push({
+//         Name: "CountryOfTheUser",
+//         Value: countryOfUser,
+//       });
+//     }
+
+//     // ✅ Rebuild bookingProfileObj with CSPs first
+//     const bookingProfileObj = {
+//       CustomSupplierParameterList: {
+//         CustomSupplierParameter: globalCSPs,
+//       },
+//       TravellerList: {
+//         Traveller: travellers,
+//       },
+//       ContactDetails: bookingProfile.ContactDetails,
+//       BillingDetails: bookingProfile.BillingDetails,
+//       // Add more fields here if necessary
+//     };
+
+//     // Final ProcessTerms object
+//     const processTermsObj = {
+//       XmlLoginId: loginId,
+//       LoginId: loginId,
+//       Mode: mode,
+//       RoutingId: routingId,
+//       OutwardId: outwardId,
+//       ...(returnId ? { ReturnId: returnId } : {}),
+//       BookingProfile: bookingProfileObj,
+//     };
+
+//     const requestObj = {
+//       CommandList: {
+//         ProcessTerms: processTermsObj,
+//       },
+//     };
+
+//     // Convert to XML
+//     const builder = new Builder({ headless: true });
+//     const xml = builder.buildObject(requestObj);
+
+//     // Send XML to TravelFusion
+//     const response = await axios.post(travelFusionUrl, xml, {
+//       headers: {
+//         "Content-Type": "text/xml; charset=utf-8",
+//         Accept: "text/xml",
+//         "Accept-Encoding": "gzip, deflate",
+//       },
+//       timeout: 150000,
+//     });
+
+//     // Logging/Return options
+//     if (xmllog === "yes" && xmlreq === "yes") {
+//       return res.status(200).send(xml);
+//     } else if (xmllog === "yes") {
+//       return res.status(200).send(response.data);
+//     }
+
+//     const parsed = await parseStringPromise(response.data);
+//     const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
+
+//     if (termsResponse && Object.keys(termsResponse).length > 0) {
+//       res.status(200).json({ data: termsResponse });
+//     } else {
+//       res.status(200).send(response.data);
+//     }
+//   } catch (err) {
+//     console.error("ProcessTerms Error:", err.message);
+//     res.status(500).json({ error: err.message });
+//   }
+// };
+
 const processTerms = async (req, res) => {
   try {
     const {
@@ -393,6 +576,7 @@ const processTerms = async (req, res) => {
     }
 
     // const loginId = await fetchLoginID();
+    const loginId = "sample-login-id"; // Replace with actual login ID logic
 
     const {
       ContactDetails: {
@@ -414,49 +598,57 @@ const processTerms = async (req, res) => {
     const fullName = `${Title || ""} ${nameParts}`.trim();
     const userData = `${Email || ""}, ${phone || ""}, ${fullName}`;
 
-    // Handle travellers
     let travellers = bookingProfile.TravellerList?.Traveller || [];
     if (!Array.isArray(travellers)) {
       travellers = [travellers];
     }
 
-    travellers = travellers.map((traveller, index) => {
-      const seat = seatOptions[index] || "";
-      const outwardLuggage = outwardLuggageOptions[index] || "";
-      const returnLuggage = returnLuggageOptions[index] || "";
-      const luggage = luggageOptions[index] || "";
+    const buildTravellers = (ensureSeatSemicolon = false) => {
+      return travellers.map((traveller, index) => {
+        const seat = seatOptions[index] || "";
+        const outwardLuggage = outwardLuggageOptions[index] || "";
+        const returnLuggage = returnLuggageOptions[index] || "";
+        const luggage = luggageOptions[index] || "";
 
-      let csps =
-        traveller.CustomSupplierParameterList?.CustomSupplierParameter || [];
+        let csps =
+          traveller.CustomSupplierParameterList?.CustomSupplierParameter || [];
 
-      if (!Array.isArray(csps)) {
-        csps = [csps];
-      }
-
-      if (seat) {
-        csps.push({ Name: "SeatOptions", Value: `${seat};` });
-      }
-
-      if (luggage) {
-        csps.push({ Name: "LuggageOptions", Value: luggage });
-      } else {
-        if (outwardLuggage) {
-          csps.push({ Name: "OutwardLuggageOptions", Value: outwardLuggage });
+        if (!Array.isArray(csps)) {
+          csps = [csps];
         }
-        if (returnLuggage) {
-          csps.push({ Name: "ReturnLuggageOptions", Value: returnLuggage });
+
+        if (seat) {
+          const formattedSeat =
+            ensureSeatSemicolon && !seat.endsWith(";") ? `${seat};` : `${seat}`;
+          csps.push({ Name: "SeatOptions", Value: formattedSeat });
         }
-      }
 
-      return {
-        ...traveller,
-        CustomSupplierParameterList: {
-          CustomSupplierParameter: csps,
-        },
-      };
-    });
+        if (luggage) {
+          csps.push({ Name: "LuggageOptions", Value: luggage });
+        } else {
+          if (outwardLuggage) {
+            csps.push({
+              Name: "OutwardLuggageOptions",
+              Value: outwardLuggage,
+            });
+          }
+          if (returnLuggage) {
+            csps.push({
+              Name: "ReturnLuggageOptions",
+              Value: returnLuggage,
+            });
+          }
+        }
 
-    // Build global CSPs
+        return {
+          ...traveller,
+          CustomSupplierParameterList: {
+            CustomSupplierParameter: csps,
+          },
+        };
+      });
+    };
+
     const globalCSPs = [
       {
         Name: "EndUserDeviceMACAddress",
@@ -487,60 +679,79 @@ const processTerms = async (req, res) => {
       });
     }
 
-    // ✅ Rebuild bookingProfileObj with CSPs first
-    const bookingProfileObj = {
-      CustomSupplierParameterList: {
-        CustomSupplierParameter: globalCSPs,
-      },
-      TravellerList: {
-        Traveller: travellers,
-      },
-      ContactDetails: bookingProfile.ContactDetails,
-      BillingDetails: bookingProfile.BillingDetails,
-      // Add more fields here if necessary
+    const buildRequestXml = (travellersList) => {
+      const bookingProfileObj = {
+        CustomSupplierParameterList: {
+          CustomSupplierParameter: globalCSPs,
+        },
+        TravellerList: {
+          Traveller: travellersList,
+        },
+        ContactDetails: bookingProfile.ContactDetails,
+        BillingDetails: bookingProfile.BillingDetails,
+      };
+
+      const processTermsObj = {
+        XmlLoginId: loginId,
+        LoginId: loginId,
+        Mode: mode,
+        RoutingId: routingId,
+        OutwardId: outwardId,
+        ...(returnId ? { ReturnId: returnId } : {}),
+        BookingProfile: bookingProfileObj,
+      };
+
+      const requestObj = {
+        CommandList: {
+          ProcessTerms: processTermsObj,
+        },
+      };
+
+      const builder = new Builder({ headless: true });
+      return builder.buildObject(requestObj);
     };
 
-    // Final ProcessTerms object
-    const processTermsObj = {
-      XmlLoginId: loginId,
-      LoginId: loginId,
-      Mode: mode,
-      RoutingId: routingId,
-      OutwardId: outwardId,
-      ...(returnId ? { ReturnId: returnId } : {}),
-      BookingProfile: bookingProfileObj,
+    const sendToTravelFusion = async (xml) => {
+      return await axios.post(travelFusionUrl, xml, {
+        headers: {
+          "Content-Type": "text/xml; charset=utf-8",
+          Accept: "text/xml",
+          "Accept-Encoding": "gzip, deflate",
+        },
+        timeout: 150000,
+      });
     };
 
-    const requestObj = {
-      CommandList: {
-        ProcessTerms: processTermsObj,
-      },
-    };
+    // STEP 1: First request
+    let xml = buildRequestXml(buildTravellers());
+    let response = await sendToTravelFusion(xml);
 
-    // Convert to XML
-    const builder = new Builder({ headless: true });
-    const xml = builder.buildObject(requestObj);
-
-    // Send XML to TravelFusion
-    const response = await axios.post(travelFusionUrl, xml, {
-      headers: {
-        "Content-Type": "text/xml; charset=utf-8",
-        Accept: "text/xml",
-        "Accept-Encoding": "gzip, deflate",
-      },
-      timeout: 150000,
-    });
-
-    // Logging/Return options
     if (xmllog === "yes" && xmlreq === "yes") {
       return res.status(200).send(xml);
     } else if (xmllog === "yes") {
       return res.status(200).send(response.data);
     }
 
-    const parsed = await parseStringPromise(response.data);
-    const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
+    let parsed = await parseStringPromise(response.data);
+    const error = parsed?.CommandList?.CommandExecutionFailure?.[0]?.ProcessTerms?.[0]?.$;
 
+    // STEP 2: Retry if seat option error
+    if (error?.ecode === "2-2460") {
+      // console.warn("Retrying due to invalid seat options...");
+      const retryXml = buildRequestXml(buildTravellers(true));
+      const retryResponse = await sendToTravelFusion(retryXml);
+      const retryParsed = await parseStringPromise(retryResponse.data);
+      const retryTermsResponse = retryParsed?.CommandList?.ProcessTerms?.[0];
+
+      if (retryTermsResponse && Object.keys(retryTermsResponse).length > 0) {
+        return res.status(200).json({ data: retryTermsResponse });
+      } else {
+        return res.status(200).send(retryResponse.data);
+      }
+    }
+
+    // STEP 3: Normal success
+    const termsResponse = parsed?.CommandList?.ProcessTerms?.[0];
     if (termsResponse && Object.keys(termsResponse).length > 0) {
       res.status(200).json({ data: termsResponse });
     } else {
@@ -551,6 +762,8 @@ const processTerms = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+
 
 const startBooking = async (req, res) => {
   try {
