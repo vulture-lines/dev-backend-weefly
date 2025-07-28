@@ -434,7 +434,7 @@ const processTerms = async (req, res) => {
       }
 
       if (seat) {
-        csps.push({ Name: "SeatOptions", Value: `${seat};` });
+        csps.push({ Name: "SeatOptions", Value: `${seat}` });
       }
 
       if (luggage) {
