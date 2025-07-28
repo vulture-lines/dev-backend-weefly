@@ -544,7 +544,8 @@ const processTerms = async (req, res) => {
     if (termsResponse && Object.keys(termsResponse).length > 0) {
       res.status(200).json({ data: termsResponse });
     } else {
-      res.status(200).send(response.data);
+       const termsResponse = parsed?.CommandList?.CommandExecutionFailure?.ProcessTerms?.[0];
+      res.status(400).send(termsResponse);
     }
   } catch (err) {
     console.error("ProcessTerms Error:", err.message);
