@@ -735,7 +735,7 @@ const processTerms = async (req, res) => {
 
     let parsed = await parseStringPromise(response.data);
     const error = parsed?.CommandList?.CommandExecutionFailure?.[0]?.ProcessTerms?.[0]?.$;
-
+    return res.status(422).send(error);
     // STEP 2: Retry if seat option error
     if (error?.ecode === "2-2460") {
       console.warn("Retrying due to invalid seat options...");
