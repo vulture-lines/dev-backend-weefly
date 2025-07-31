@@ -173,6 +173,9 @@ const getExtraChargesAndProducts = async (req, res) => {
     },
   });
 
+      if (xmllog && xmlreq) {
+      return res.send(xmlPayload);
+    }
   try {
     const response = await axios.post(
       "https://tcv-stage.crane.aero/craneota/CraneOTAService?wsdl",
@@ -186,9 +189,7 @@ const getExtraChargesAndProducts = async (req, res) => {
       }
     );
 
-    if (xmllog && xmlreq) {
-      return res.send(xmlPayload);
-    }
+
 
     const parsed = await parseStringPromise(response.data, {
       explicitArray: false,
@@ -318,8 +319,197 @@ const createBooking = async (req, res) => {
   }
 };
 
+
+
+const getSeatMap = async (req, res) => {
+  const username = process.env.API_USERNAME_CABOVERDE;
+  const password = process.env.API_PASSWORD_CABOVERDE;
+
+  const builder = new Builder({ headless: true });
+
+  const {
+    preferredCurrency,
+    flightSegment,
+    bookingReferenceID,
+    xmllog,
+    xmlreq,
+  } = req.body;
+
+  const xmlPayload = builder.buildObject({
+    "soapenv:Envelope": {
+      $: {
+        "xmlns:soapenv": "http://schemas.xmlsoap.org/soap/envelope/",
+        "xmlns:impl": "http://impl.soap.ws.crane.hititcs.com/",
+      },
+      "soapenv:Header": {},
+      "soapenv:Body": {
+        "impl:GetSeatMap": {
+          AncillaryOtaSeatMapRequest: {
+            clientInformation: {
+              clientIP: (req.ip || req.connection.remoteAddress || "unknown").replace(/^::ffff:/, ""),
+              member: false,
+              password: password,
+              userName: username,
+              preferredCurrency: preferredCurrency || "CVE",
+            },
+            flightSegment,
+            frequentFlyerRedemption: {},
+            bookingReferenceID,
+          },
+        },
+      },
+    },
+  });
+
+  try {
+    const response = await axios.post(
+      "https://tcv-stage.crane.aero/craneota/CraneAncillaryOTAService?wsdl",
+      xmlPayload,
+      {
+        headers: {
+          "Content-Type": "text/xml;charset=UTF-8",
+          SOAPAction: "",
+        },
+        timeout: 60000,
+      }
+    );
+
+    if (xmllog && xmlreq) {
+      return res.send(xmlPayload);
+    }
+
+    const parsed = await parseStringPromise(response.data, {
+      explicitArray: false,
+    });
+
+    if (xmllog) {
+      return res.send(response.data);
+    }
+
+    res.json({
+      rawResponse: parsed,
+    });
+  } catch (err) {
+    console.error("Crane OTA SeatMap Error:", err);
+    res.status(500).json({
+      error: "Failed to fetch seat map",
+      details: err.message,
+    });
+  }
+};
+
+
+const getAvailableSpecialServices = async (req, res) => {
+  const username = process.env.API_USERNAME_CABOVERDE;
+  const password = process.env.API_PASSWORD_CABOVERDE;
+
+  const builder = new Builder({ headless: true });
+
+  const {
+    preferredCurrency = "CVE",
+    bookingReferenceID = {},
+    xmllog = false,
+    xmlreq = false,
+  } = req.body;
+
+  const {
+    ID = "12S5B1",
+    referenceID = "13898148",
+    companyName = {},
+  } = bookingReferenceID;
+
+  const {
+    cityCode = "SID",
+    code = "VR",
+    codeContext = "CRANE",
+    companyFullName = "Hitit Admin",
+    companyShortName = "Hitit Admin",
+    countryCode = "CV",
+  } = companyName;
+
+  const clientIP =
+    (req.ip || req.connection?.remoteAddress || "129.0.0.1").replace(
+      /^::ffff:/,
+      ""
+    );
+
+  const xmlPayload = builder.buildObject({
+    "soapenv:Envelope": {
+      $: {
+        "xmlns:soapenv": "http://schemas.xmlsoap.org/soap/envelope/",
+        "xmlns:impl": "http://impl.soap.ws.crane.hititcs.com/",
+      },
+      "soapenv:Header": {},
+      "soapenv:Body": {
+        "impl:GetAvailableSpecialServices": {
+          AncillaryOtaSsrAvailRequest: {
+            clientInformation: {
+              clientIP,
+              member: false,
+              password,
+              userName: username,
+              preferredCurrency,
+            },
+            bookingReferenceID: {
+              companyName: {
+                cityCode,
+                code,
+                codeContext,
+                companyFullName,
+                companyShortName,
+                countryCode,
+              },
+              ID,
+              referenceID,
+            },
+            cabinUpgradeAvailable: "",
+            frequentFlyerRedemption: "",
+          },
+        },
+      },
+    },
+  });
+
+  try {
+    const response = await axios.post(
+      "https://tcv-stage.crane.aero/craneota/CraneOTAService?wsdl",
+      xmlPayload,
+      {
+        headers: {
+          "Content-Type": "text/xml;charset=UTF-8",
+          SOAPAction: "",
+        },
+        timeout: 60000,
+      }
+    );
+
+    if (xmllog && xmlreq) {
+      return res.send(xmlPayload);
+    }
+
+    const parsed = await parseStringPromise(response.data, {
+      explicitArray: false,
+    });
+
+    if (xmllog) {
+      return res.send(response.data);
+    }
+
+    res.json({ rawResponse: parsed });
+  } catch (err) {
+    console.error("Crane SSR Availability Error:", err.message);
+    res.status(500).json({
+      error: "Failed to fetch special service availability",
+      details: err.message,
+    });
+  }
+};
+
+
 module.exports = {
   getAvailability,
   getExtraChargesAndProducts,
-  createBooking
+  createBooking,
+  getSeatMap,
+  getAvailableSpecialServices
 };
