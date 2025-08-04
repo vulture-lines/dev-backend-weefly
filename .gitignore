@@ -4,3 +4,4 @@ api/*/flight/xmllogs
 apidocs
 backup
 Server.zip
+node_modules
