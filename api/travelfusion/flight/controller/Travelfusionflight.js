@@ -1074,6 +1074,59 @@ const getSupplierRoutes = async (req, res) => {
   }
 };
 
+const createVirtualCard = async (req, res) => {
+  try {
+    const {
+      amount,
+      currency,
+      expirationDate, // format: "dd/mm/yyyy"
+    } = req.body;
+
+    // Check for required inputs
+    if (!amount || !currency || !expirationDate) {
+      return res.status(422).json({
+        error: "amount, currency, and expirationDate are required",
+      });
+    }
+
+    // const loginId = await fetchLoginID();
+    const builder = new Builder({ headless: true });
+
+    const vccObj = {
+      CommandList: {
+        CreatePrepayVirtualCard: {
+          XmlLoginId: loginId,
+          LoginId: loginId,
+          ...(locator ? { Locator: locator } : {}),
+          ExpirationTime: expirationDate,
+          Currency: currency,
+          Amount: amount,
+        },
+      },
+    };
+
+    const xml = builder.buildObject(vccObj);
+
+    const response = await axios.post(travelFusionUrl, xml, {
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        Accept: "text/xml",
+        "Accept-Encoding": "gzip, deflate",
+      },
+      timeout: 150000,
+    });
+
+    const parsed = await parseStringPromise(response.data);
+
+    res.status(200).json({
+      virtualCardData: parsed,
+    });
+  } catch (err) {
+    console.error("VCC Creation Error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = {
   startRouting,
   checkRouting,
@@ -1089,4 +1142,5 @@ module.exports = {
   getCurrencyList,
   getAirports,
   getSupplierRoutes,
+  createVirtualCard
 };

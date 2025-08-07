@@ -16,6 +16,7 @@ const {
   getCurrencyList,
   getAirports,
   getSupplierRoutes,
+  createVirtualCard,
 } = require("../controller/Travelfusionflight");
 
 // POST /api/start-routing
@@ -32,6 +33,7 @@ router.post(
 );
 router.post("/cancel-booking", startBookingCancelPlane);
 router.post("/get-cancellationstatus", checkBookingCancelPlane);
+router.post("/createvirtualcard",createVirtualCard);
 router.get("/get-supplierlist", getBranchSupplierList);
 router.get("/get-currencylist", getCurrencyList);
 router.get("/get-airportlist", getAirports);
