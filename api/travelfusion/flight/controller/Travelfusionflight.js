@@ -275,8 +275,12 @@ const checkRouting = async (req, res) => {
     } else if (xmllog === "yes") {
       return res.status(200).send(xmlresponse);
     }
+    if(flightList){
+    return res.status(200).json({ routingId: routeId, flightList: flightList });
+    } else{
+      return res.status(204).json({message:"No flights available for the routeId"})
+    }
 
-    res.status(200).json({ routingId: routeId, flightList: flightList });
   } catch (err) {
     console.error("CheckRouting Error:", err.message);
     res.status(500).json({ error: err.message });
