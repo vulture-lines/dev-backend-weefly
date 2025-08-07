@@ -1080,6 +1080,7 @@ const createVirtualCard = async (req, res) => {
       amount,
       currency,
       expirationDate, // format: "dd/mm/yyyy"
+      locator
     } = req.body;
 
     // Check for required inputs
