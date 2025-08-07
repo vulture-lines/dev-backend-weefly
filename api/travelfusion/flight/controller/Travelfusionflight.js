@@ -275,12 +275,15 @@ const checkRouting = async (req, res) => {
     } else if (xmllog === "yes") {
       return res.status(200).send(xmlresponse);
     }
-    if(flightList){
-    return res.status(200).json({ routingId: routeId, flightList: flightList });
-    } else{
-      return res.status(204).json({message:"No flights available for the routeId"})
+    if (flightList) {
+      return res
+        .status(200)
+        .json({ routingId: routeId, flightList: flightList });
+    } else {
+      return res
+        .status(204)
+        .json({ message: "No flights available for the routeId" });
     }
-
   } catch (err) {
     console.error("CheckRouting Error:", err.message);
     res.status(500).json({ error: err.message });
@@ -388,6 +391,7 @@ const processTerms = async (req, res) => {
       countryOfUser,
       xmlreq,
       xmllog,
+      useTFPay,
     } = req.body;
 
     if (!routingId || !bookingProfile) {
@@ -490,6 +494,12 @@ const processTerms = async (req, res) => {
         Value: countryOfUser,
       });
     }
+    if (useTFPay === "yes") {
+      globalCSPs.push({
+        Name: "UseTFPrepay",
+        Value: "Always",
+      });
+    }
 
     // ✅ Rebuild bookingProfileObj with CSPs first
     const bookingProfileObj = {
@@ -552,7 +562,7 @@ const processTerms = async (req, res) => {
       const error =
         parsed?.CommandList?.CommandExecutionFailure?.[0]?.ProcessTerms?.[0]?.$;
       if (error?.ecode === "2-2460") {
-        return res.status(422).json({error:error})
+        return res.status(422).json({ error: error });
       }
       res.status(200).send(response.data);
     }
