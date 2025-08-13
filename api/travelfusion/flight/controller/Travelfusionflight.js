@@ -63,7 +63,7 @@ const startRouting = async (req, res) => {
       xmlreq,
       location,
       maxChanges = 1,
-      maxHops = 3,
+      maxHops = 2,
     } = req.body;
 
     const preferredLanguage = "EN";
