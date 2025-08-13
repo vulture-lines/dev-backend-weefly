@@ -567,6 +567,8 @@ const processTerms = async (req, res) => {
         parsed?.CommandList?.CommandExecutionFailure?.[0]?.ProcessTerms?.[0]?.$;
       if (error?.ecode === "2-2460") {
         return res.status(422).json({ error: error });
+      } if(error?.ecode==="2-2435"){
+        return res.status(422).json({ error: error });
       }
       res.status(200).send(response.data);
     }
