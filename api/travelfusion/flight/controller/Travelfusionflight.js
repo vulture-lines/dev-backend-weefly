@@ -1025,7 +1025,7 @@ const getAirports = async (req, res) => {
 const getSupplierRoutes = async (req, res) => {
   try {
     // const loginId = await fetchLoginID();
-    const suppliers = ["ezy"]; // Hardcoded suppliers
+    const suppliers = ["tapairportugal"]; // Hardcoded suppliers
     const builder = new Builder({ headless: true });
 
     const allRoutes = [];
