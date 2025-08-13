@@ -569,6 +569,8 @@ const processTerms = async (req, res) => {
         return res.status(422).json({ error: error });
       } if(error?.ecode==="2-2435"){
         return res.status(422).json({ error: error });
+      } if(error?.ecode==="3-3044"){
+        return res.status(409).json({ error: error });
       }
       res.status(200).send(response.data);
     }
