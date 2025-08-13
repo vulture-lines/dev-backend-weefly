@@ -386,6 +386,7 @@ const processTerms = async (req, res) => {
       luggageOptions = [],
       outwardLuggageOptions = [],
       returnLuggageOptions = [],
+      mealTypes=[],
       outwardId,
       returnId = null,
       countryOfUser,
@@ -433,7 +434,7 @@ const processTerms = async (req, res) => {
       const outwardLuggage = outwardLuggageOptions[index] || "";
       const returnLuggage = returnLuggageOptions[index] || "";
       const luggage = luggageOptions[index] || "";
-
+      const mealType = mealTypes?.[index] || "";
       let csps =
         traveller.CustomSupplierParameterList?.CustomSupplierParameter || [];
 
@@ -454,6 +455,9 @@ const processTerms = async (req, res) => {
         if (returnLuggage) {
           csps.push({ Name: "ReturnLuggageOptions", Value: returnLuggage });
         }
+      }
+            if (mealType) {
+        csps.push({ Name: "MealType", Value: mealType });
       }
 
       return {
