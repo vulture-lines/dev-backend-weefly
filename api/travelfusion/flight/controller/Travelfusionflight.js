@@ -441,9 +441,9 @@ const processTerms = async (req, res) => {
         csps = [csps];
       }
 
-      if (seat) {
-        csps.push({ Name: "SeatOptions", Value: `${seat}` });
-      }
+      // if (seat) {
+      //   csps.push({ Name: "SeatOptions", Value: `${seat}` });
+      // }
 
       if (luggage) {
         csps.push({ Name: "LuggageOptions", Value: luggage });
@@ -500,7 +500,13 @@ const processTerms = async (req, res) => {
         Value: "Always",
       });
     }
-
+    // Add seatOptions globally
+    if (seatOptions.length > 0) {
+      globalCSPs.push({
+        Name: "SeatOptions",
+        Value: seatOptions.join(","),
+      });
+    }
     // ✅ Rebuild bookingProfileObj with CSPs first
     const bookingProfileObj = {
       CustomSupplierParameterList: {
@@ -1080,7 +1086,7 @@ const createVirtualCard = async (req, res) => {
       amount,
       currency,
       expirationDate, // format: "dd/mm/yyyy"
-      locator
+      locator,
     } = req.body;
 
     // Check for required inputs
@@ -1143,5 +1149,5 @@ module.exports = {
   getCurrencyList,
   getAirports,
   getSupplierRoutes,
-  createVirtualCard
+  createVirtualCard,
 };
